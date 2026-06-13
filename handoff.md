@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current state:** 🎉 **M0 COMPLETE** and **pushed to GitHub**. **M1a plan WRITTEN — awaiting owner review.** On approval: execute M1a starting at Task 0 (add deps), inline, check-in per task.
+- **Current state:** **M1a IN PROGRESS** — Tasks 0–3 ✅ (deps, provider types, retry, circuit breaker). **Next: Task 4** (market-hours `market_state`). 24 tests pass. (M0 complete + pushed.)
 - **Remote:** `origin` = https://github.com/heon-1219/DC_Intel.git (gh authed as heon-1219; `git push` works). `main` tracks `origin/main`. Push after milestones (or per commit).
 - **Run the stack:** `docker compose up -d --build` → http://localhost/healthz = 200. Stop: `docker compose down` (the `dbdata` named volume persists the SQLite DB across down/up). First build ~1–2 min.
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
@@ -62,4 +62,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **🎉 M0 COMPLETE** — foundation runs end-to-end on localhost ($0): app + `/healthz`, SQLite/WAL schema + migrations, real seed, Redis, docker-compose. 18 tests green. Commits `75ae3b8`→`12d265d` (+ Task 10).
 - **GitHub remote ✅** — `origin` added (https://github.com/heon-1219/DC_Intel.git); all M0 commits pushed; `main`↔`origin/main`.
 - **M1 split into M1a + M1b** (roadmap updated). **M1a plan written** (`docs/superpowers/plans/2026-06-13-dc-intel-m1a-prices.md`): 12 tasks (Task 0 deps → providers/retry/breaker → yfinance+finnhub+pykrx adapters → market-hours → stocks repo + instrument parser → price service → price_poller → `/stocks/{i}/price` → APScheduler wiring). Default tests offline (fakes/fakeredis/respx); real upstreams `@pytest.mark.live`; Task 11 ends with a `docker compose` price smoke. **M1b (cross-market + FX) plan written after M1a is green.**
-- **Awaiting owner review of the M1a plan** before executing.
+- **M1a execution (in progress):**
+  - **Task 0 ✅** deps installed on Python 3.14 (no wheel issues): pandas 2.3.3, pykrx 1.2.8, **yfinance 1.4.1** (newer than plan floor — `fast_info` keys finalized by the Task-5 live test), apscheduler, tzdata, respx. `live` marker + `addopts=-m 'not live'` active.
+  - **Tasks 1–3 ✅** — `providers/base.py` (StockRef/PriceQuote/Provider) + `tests/_fakes.py`; `providers/retry.py` (with_retry); `providers/breaker.py` (Redis circuit breaker). **24 tests pass.**
+  - **Next: Task 4** market-hours → Task 5 yfinance adapter → 6 fallbacks → 7 repo/parser → 8 service → 9 poller → 10 `/price` → 11 scheduler (+docker smoke).
