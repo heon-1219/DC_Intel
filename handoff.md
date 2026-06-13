@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current task:** Task 2 ✅ DONE (commit `de94aa2`). **Next: Task 3** (`db/connection.py` — aiosqlite + WAL pragmas).
+- **Current task:** Task 3 ✅ DONE (commit pending this turn). **Next: Task 4** (`migrations/001_initial_schema.sql` — the 9-table DDL).
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
 - **Branch:** `main` (fresh repo, git init'd in Task 1).
 
@@ -46,4 +46,5 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **Task 1 ✅** (`75ae3b8`) — git init on `main`; `.gitignore`; `backend/pyproject.toml`; `app` package; pytest harness; smoke test PASS. Working tree clean.
 - **uv switch ✅** (`f5bec05`) — venv now managed by uv; M0 plan + README + handoff updated.
 - **Task 2 ✅** (`de94aa2`) — `config.py` (pydantic-settings, JWT_SECRET ≥32 validation, corrected `sqlite_path`) + `test_config.py` (4 tests). Full suite: **5 passed**.
-- Task 3 — next: `db/connection.py` (aiosqlite factory + WAL pragmas).
+- **Task 3 ✅** — `db/connection.py` (`connect()` async ctx mgr applying WAL/synchronous/busy_timeout/foreign_keys pragmas; `aiosqlite.Row` factory) + `test_connection.py`. Full suite: **6 passed**.
+- Task 4 — next: `migrations/001_initial_schema.sql` (9 tables + indexes, verbatim from `schema.md` §3). No test of its own — exercised by Task 5's runner tests.
