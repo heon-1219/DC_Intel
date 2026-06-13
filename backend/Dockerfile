@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+WORKDIR /srv/backend
+
+# Copy source first, then editable-install: editable keeps `app` pointing at
+# /srv/backend/app so the __file__-relative migrations/ and ../config paths resolve.
+COPY backend/ ./
+COPY config/ /srv/config/
+RUN pip install --no-cache-dir -e .
+
+ENV DATABASE_URL=sqlite+aiosqlite:////data/dcintel.db
+# Normalize line endings (Windows authoring) before making the entrypoint executable.
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
+
+CMD ["./entrypoint.sh"]

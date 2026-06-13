@@ -1,0 +1,17 @@
+:80 {
+	handle /healthz {
+		reverse_proxy backend:8000
+	}
+	handle /auth/* {
+		reverse_proxy backend:8000
+	}
+	handle /stocks/* {
+		reverse_proxy backend:8000
+	}
+	handle /dashboard/* {
+		reverse_proxy backend:8000
+	}
+	handle {
+		respond "DC Intel — frontend mounts here in M9" 200
+	}
+}
