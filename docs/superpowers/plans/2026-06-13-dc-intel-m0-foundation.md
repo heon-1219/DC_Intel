@@ -10,6 +10,13 @@
 
 **Conventions:** TDD (failing test → minimal code → green → commit). Exact paths. Real reference data in the seed. No network in the default test run.
 
+**Environment (uv — owner standard):** the dev venv is created and managed with **`uv`** (not stdlib `venv`/`pip`). One-time setup from the project root:
+```
+uv venv --python 3.14 backend\.venv
+uv pip install -p backend\.venv\Scripts\python.exe -e "./backend[dev]"
+```
+Every `pytest ...` / `python ...` command in the steps below runs **inside that venv** — invoke as `backend\.venv\Scripts\python.exe -m pytest ...` (activation does not persist across shell calls), or `uv run --project backend pytest ...`. Add new deps with `uv pip install -p backend\.venv\Scripts\python.exe ...`.
+
 ---
 
 ## File structure built in M0
@@ -87,9 +94,14 @@ def test_app_package_imports():
     assert app is not None
 ```
 
-- [ ] **Step 4: Install deps and run the smoke test (expect PASS)**
+- [ ] **Step 4: Create the uv venv, install, and run the smoke test (expect PASS)**
 
-Run (from `backend/`): `pip install -e ".[dev]" && pytest tests/test_smoke.py -v`
+Run (uv, from the project root):
+```
+uv venv --python 3.14 backend\.venv
+uv pip install -p backend\.venv\Scripts\python.exe -e "./backend[dev]"
+backend\.venv\Scripts\python.exe -m pytest backend\tests\test_smoke.py -v
+```
 Expected: 1 passed.
 
 - [ ] **Step 5: Commit**
@@ -1005,11 +1017,11 @@ Design docs in `docs/`; implementation roadmap in `docs/superpowers/plans/`.
 2. `docker compose up -d --build`
 3. Open http://localhost/healthz → `{"status":"ok"}`.
 
-## Develop / test
+## Develop / test (uv)
 ```
-cd backend
-pip install -e ".[dev]"
-pytest          # offline, no network
+uv venv --python 3.14 backend\.venv
+uv pip install -p backend\.venv\Scripts\python.exe -e "./backend[dev]"
+backend\.venv\Scripts\python.exe -m pytest backend\tests    # offline, no network
 ```
 ```
 
