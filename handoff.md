@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current state:** **M1a IN PROGRESS** — Tasks 0–6 ✅ (deps, types, retry, breaker, market-hours, yfinance + Finnhub + pykrx adapters). **Next: Task 7** (stocks repository + `{symbol}:{exchange}` instrument parser). 34 tests pass (+2 live). Cadence: task-by-task. (M0 complete + pushed.)
+- **Current state:** **M1a IN PROGRESS** — Tasks 0–7 ✅ (data-acquisition layer + stocks repo + instrument parser). **Next: Task 8** (price service: provider chain, `fetch_and_cache`, `read_cached`, `is_stale`). 43 tests pass (+2 live). Cadence: task-by-task. (M0 complete + pushed.)
 - **Remote:** `origin` = https://github.com/heon-1219/DC_Intel.git (gh authed as heon-1219; `git push` works). `main` tracks `origin/main`. Push after milestones (or per commit).
 - **Run the stack:** `docker compose up -d --build` → http://localhost/healthz = 200. Stop: `docker compose down` (the `dbdata` named volume persists the SQLite DB across down/up). First build ~1–2 min.
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
@@ -68,4 +68,5 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
   - **Task 4 ✅** — `market/hours.py` `market_state(exchange, now_utc)` → open|closed|pre|post (KRX 09:00–15:30 KST; US 09:30–16:00 ET with pre/post, DST-aware via zoneinfo+tzdata; weekly only, no holidays in v1). 5 tests. **29 pass.**
   - **Task 5 ✅** — `providers/yfinance_provider.py` (primary; `fast_info` **attribute** access — confirmed working on yfinance 1.4.1 via the live test; **lazy-imports yfinance inside `_fetch`** so the offline suite stays ~2.5s). Offline error-wrap test + `@pytest.mark.live` Samsung fetch (passed once against the network). 30 pass + 1 live.
   - **Task 6 ✅** — `providers/finnhub_provider.py` (US fallback, httpx; 5xx/429/empty → ProviderError; 3 respx tests) + `providers/pykrx_provider.py` (KRX fallback; lazy pykrx import; **improved over plan**: 10-day OHLCV window so it survives weekends/holidays, derives `previous_close` from the prior bar, honest `as_of` at the bar's 15:30 KST close). Offline error-wrap + `@pytest.mark.live` (passed, ~34s — pykrx is slow but fallback-only). 34 pass + 2 live. *(FinnhubProvider takes `api_key`; `Settings.finnhub_api_key` to be added in Task 11 wiring — fallback degrades gracefully without a key.)*
-  - **Next: Task 7** repo/parser → 8 service → 9 poller → 10 `/price` → 11 scheduler (+docker smoke).
+  - **Task 7 ✅** — `core/instrument.py` (`parse_instrument` → uppercased `(SYMBOL, EXCHANGE)`; rejects bad/`INDEX`/malformed) + `db/repositories/stocks.py` (`get_stock`, `list_active_by_region` excluding index rows). 9 tests. **43 pass.**
+  - **Next: Task 8** price service (provider chain by region, `fetch_and_cache` writing `px:quote:*`, `read_cached`, `is_stale`) → 9 poller → 10 `/price` → 11 scheduler (+docker smoke).
