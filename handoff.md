@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current task:** Task 1 ✅ DONE (commit `75ae3b8`). **Next: Task 2** (settings/`config.py`).
+- **Current task:** Task 2 ✅ DONE (commit `de94aa2`). **Next: Task 3** (`db/connection.py` — aiosqlite + WAL pragmas).
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
 - **Branch:** `main` (fresh repo, git init'd in Task 1).
 
@@ -40,8 +40,10 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **Task 1 `pyproject.toml`:** added `[build-system]` (setuptools) + `[tool.setuptools.packages.find] include=["app*"]`. The plan omitted these; without them an editable install fails ("Multiple top-level packages discovered" — `app` and `tests`). No behavior change, just makes `pip install -e` discover only `app`.
 - **Task 1 `.gitignore`:** added `*.egg-info/` (editable install creates `backend/dc_intel_backend.egg-info/`).
 - **Task 1 commit scope:** broadened the first commit to the full repo baseline (the pre-existing approved `docs/` + `handoff.md` + scaffold) instead of scaffold-only, since this is a fresh repo and leaving 15 doc files untracked would be messy. Subsequent tasks commit per-task as planned.
+- **Task 2 `config.py`:** wrote a corrected `sqlite_path` — the plan's draft returned `/./data/...` for the relative 3-slash URL (a bug it flagged with a fallback). Clean rule: strip the scheme prefix, then strip exactly one leading `/`. Added a 4th test for the absolute 4-slash form. (Confirmed pydantic v2 `ValidationError` subclasses `ValueError`, so the short-secret test passes with `pytest.raises(ValueError)`.)
 
 ## Task changelog
-- **Task 1 ✅** (`75ae3b8`) — git init on `main`; `.gitignore`; `backend/pyproject.toml`; `app` package; pytest harness; smoke test PASS (1 passed); editable install OK. Working tree clean.
-- **Post-Task-1 (owner request):** switched the venv from stdlib `venv`/`pip` to **`uv`**. Rebuilt `backend/.venv` with `uv venv` + `uv pip install`; smoke test still PASS. Plan (M0) commands + README updated to uv. (uv venv is gitignored; no code change, so folded into the next commit.)
-- Task 2 — next: `config.py` (pydantic-settings, JWT_SECRET validation, `sqlite_path`).
+- **Task 1 ✅** (`75ae3b8`) — git init on `main`; `.gitignore`; `backend/pyproject.toml`; `app` package; pytest harness; smoke test PASS. Working tree clean.
+- **uv switch ✅** (`f5bec05`) — venv now managed by uv; M0 plan + README + handoff updated.
+- **Task 2 ✅** (`de94aa2`) — `config.py` (pydantic-settings, JWT_SECRET ≥32 validation, corrected `sqlite_path`) + `test_config.py` (4 tests). Full suite: **5 passed**.
+- Task 3 — next: `db/connection.py` (aiosqlite factory + WAL pragmas).
