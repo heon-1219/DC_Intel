@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current state:** **M1a IN PROGRESS** — Tasks 0–4 ✅ (deps, provider types, retry, breaker, market-hours). **Next: Task 5** (yfinance adapter; run its `live` test once to finalize `fast_info` keys for yfinance 1.4.1). 29 tests pass. Cadence: task-by-task. (M0 complete + pushed.)
+- **Current state:** **M1a IN PROGRESS** — Tasks 0–5 ✅ (deps, types, retry, breaker, market-hours, yfinance adapter). **Next: Task 6** (Finnhub US + pykrx KRX fallback adapters). 30 tests pass (+1 live). Cadence: task-by-task. (M0 complete + pushed.)
 - **Remote:** `origin` = https://github.com/heon-1219/DC_Intel.git (gh authed as heon-1219; `git push` works). `main` tracks `origin/main`. Push after milestones (or per commit).
 - **Run the stack:** `docker compose up -d --build` → http://localhost/healthz = 200. Stop: `docker compose down` (the `dbdata` named volume persists the SQLite DB across down/up). First build ~1–2 min.
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
@@ -66,4 +66,5 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
   - **Task 0 ✅** deps installed on Python 3.14 (no wheel issues): pandas 2.3.3, pykrx 1.2.8, **yfinance 1.4.1** (newer than plan floor — `fast_info` keys finalized by the Task-5 live test), apscheduler, tzdata, respx. `live` marker + `addopts=-m 'not live'` active.
   - **Tasks 1–3 ✅** — `providers/base.py` (StockRef/PriceQuote/Provider) + `tests/_fakes.py`; `providers/retry.py` (with_retry); `providers/breaker.py` (Redis circuit breaker). **24 tests pass.**
   - **Task 4 ✅** — `market/hours.py` `market_state(exchange, now_utc)` → open|closed|pre|post (KRX 09:00–15:30 KST; US 09:30–16:00 ET with pre/post, DST-aware via zoneinfo+tzdata; weekly only, no holidays in v1). 5 tests. **29 pass.**
-  - **Next: Task 5** yfinance adapter → 6 fallbacks → 7 repo/parser → 8 service → 9 poller → 10 `/price` → 11 scheduler (+docker smoke).
+  - **Task 5 ✅** — `providers/yfinance_provider.py` (primary; `fast_info` **attribute** access — confirmed working on yfinance 1.4.1 via the live test; **lazy-imports yfinance inside `_fetch`** so the offline suite stays ~2.5s). Offline error-wrap test + `@pytest.mark.live` Samsung fetch (passed once against the network). 30 pass + 1 live.
+  - **Next: Task 6** fallbacks (Finnhub via httpx/respx, pykrx) → 7 repo/parser → 8 service → 9 poller → 10 `/price` → 11 scheduler (+docker smoke).
