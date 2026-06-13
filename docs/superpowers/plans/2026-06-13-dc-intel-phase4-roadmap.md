@@ -76,6 +76,8 @@ dc-intel/
 **Task breakdown:** see `2026-06-13-dc-intel-m0-foundation.md`.
 
 ### M1 — Market-data pipeline (prices/volume/fundamentals)
+> **Delivered as two shippable slices** (writing-plans "split independent subsystems"): **M1a — live single-listing prices** (`…-m1a-prices.md`, *detailed plan written*) and **M1b — cross-market + FX** (`/prices-across-markets`, plan written after M1a executes). M1a ships working live `/price`; M1b adds FX + ADR-normalized cross-listing comparison on top.
+
 **Delivers:** provider interface + retry/circuit-breaker; yfinance adapter (prices/volume), Finnhub (US) + pykrx (KRX) fallbacks; FX rates; `price_poller` job; `px:quote`/`px:fx` Redis cache with `data_as_of`+`is_stale`; `GET /stocks/{i}/price` and `/prices-across-markets` (FX-normalized diff per `ui-ux.md` §6.3 / `backend-design.md` §6.6).
 **Depends on:** M0.
 **Key docs:** `data-sources.md` (§1, §9), `backend-design.md` (§2, §5, §6.4, §6.6, §9), `schema.md` (`stocks`).

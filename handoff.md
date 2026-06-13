@@ -5,7 +5,8 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current task:** Task 10 ✅ DONE (commit pending this turn) → **🎉 M0 COMPLETE (10/10).** **Next: M1 — market-data pipeline** (write its detailed plan first: `docs/superpowers/plans/2026-06-13-dc-intel-m1-market-data.md`, then execute).
+- **Current state:** 🎉 **M0 COMPLETE** and **pushed to GitHub**. **M1a plan WRITTEN — awaiting owner review.** On approval: execute M1a starting at Task 0 (add deps), inline, check-in per task.
+- **Remote:** `origin` = https://github.com/heon-1219/DC_Intel.git (gh authed as heon-1219; `git push` works). `main` tracks `origin/main`. Push after milestones (or per commit).
 - **Run the stack:** `docker compose up -d --build` → http://localhost/healthz = 200. Stop: `docker compose down` (the `dbdata` named volume persists the SQLite DB across down/up). First build ~1–2 min.
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
 - **Branch:** `main` (fresh repo, git init'd in Task 1).
@@ -59,4 +60,6 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **Task 9 ✅** — `backend/Dockerfile`, `backend/entrypoint.sh` (migrate→seed→uvicorn), `docker-compose.yml` (backend+redis+caddy), `Caddyfile`, `.dockerignore`, `.gitattributes`. **Verified: `docker compose up -d --build` → `localhost/healthz` HTTP 200 `{sqlite:true,redis:true}`; backend log applied migration + seeded 12; restart idempotent (schema up to date / already seeded); stack brought down clean.** Deviations vs plan: copy source before editable install (so `app` + the `__file__`-relative migrations/config paths resolve in-container); `.dockerignore` excludes `.venv`/git; Dockerfile `sed` strips CR from entrypoint (Windows authoring); Caddy `handle` blocks for deterministic routing.
 - **Task 10 ✅** — `config/.env.example` (all env vars, local-first defaults, free data-source keys + X session cookies, commented) + `README.md` (run/test instructions). Full suite: **18 passed**.
 - **🎉 M0 COMPLETE** — foundation runs end-to-end on localhost ($0): app + `/healthz`, SQLite/WAL schema + migrations, real seed, Redis, docker-compose. 18 tests green. Commits `75ae3b8`→`12d265d` (+ Task 10).
-- **M1 — next milestone:** market-data pipeline (prices/volume via yfinance + pykrx/Finnhub fallback, FX, `price_poller`, `px:*` cache, `/stocks/{i}/price` + `/prices-across-markets`). Per the roadmap, **write the detailed M1 plan first**, then execute task-by-task.
+- **GitHub remote ✅** — `origin` added (https://github.com/heon-1219/DC_Intel.git); all M0 commits pushed; `main`↔`origin/main`.
+- **M1 split into M1a + M1b** (roadmap updated). **M1a plan written** (`docs/superpowers/plans/2026-06-13-dc-intel-m1a-prices.md`): 12 tasks (Task 0 deps → providers/retry/breaker → yfinance+finnhub+pykrx adapters → market-hours → stocks repo + instrument parser → price service → price_poller → `/stocks/{i}/price` → APScheduler wiring). Default tests offline (fakes/fakeredis/respx); real upstreams `@pytest.mark.live`; Task 11 ends with a `docker compose` price smoke. **M1b (cross-market + FX) plan written after M1a is green.**
+- **Awaiting owner review of the M1a plan** before executing.
