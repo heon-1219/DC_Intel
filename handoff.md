@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current task:** Task 7 ✅ DONE (commit pending this turn). **Next: Task 8** (app factory + `/healthz`).
+- **Current task:** Task 8 ✅ DONE (commit pending this turn). **Next: Task 9** (container stack: Dockerfile, entrypoint, docker-compose, Caddyfile).
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
 - **Branch:** `main` (fresh repo, git init'd in Task 1).
 
@@ -53,4 +53,6 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **Tasks 4 + 5 ✅** — `migrations/001_initial_schema.sql` (9 tables + indexes, verbatim from `schema.md` §3) and `db/migrate.py` (numbered-SQL runner, `schema_migrations`, one-txn-per-file) + `test_migrate.py` (3 tests: all tables created, idempotent, CHECK rejects bad timeframe). Full suite: **9 passed**. Also smoke-tested the `python -m app.db.migrate` CLI (the Docker entrypoint path): applies then idempotent.
 - **Task 6 ✅** — `config/seed_stocks.csv` (12 real rows: 4 KRX + AAPL/NVDA + PKX ADR + 5 index pseudo-rows) and `db/seed.py` (insert only if `stocks` empty; ""→NULL; `__file__`-relative `__main__` CSV path = `parents[3]/config`, works locally and in-container where config sits beside backend/). `test_seed.py` (4 tests: populates ≥12, idempotent, resolves 005930→005930.KS, empty→NULL + adr coercion). Full suite: **13 passed**. Seed CLI smoke-tested (seeded 12 → idempotent).
 - **Task 7 ✅** — `cache/redis.py` (`get_client` via redis.asyncio decode_responses; `ping` returns False on any error; `make_envelope` = the `{data, meta}` contract, backend-design.md §12) + `test_redis.py` (3 tests, fakeredis). Full suite: **16 passed**.
-- Task 8 — next: app factory (`app/main.py`) + `routers/health.py` `/healthz` (checks sqlite + redis); `tests/conftest.py` fixture (temp DB + fakeredis monkeypatch + `get_settings.cache_clear()`).
+- **Task 8 ✅** — `app/main.py` (`create_app()` + module-level `app`), `routers/health.py` (`/healthz` → 200 if sqlite+redis OK else 503), `tests/conftest.py` (`app_client` fixture: temp migrated DB + fakeredis, `get_settings.cache_clear()`) + `test_health.py` (2 tests: ok + degraded-503). Full suite: **18 passed**.
+  - **Important pattern:** `/healthz` calls **`cache_redis.get_client()` via the module** (not `from ... import get_client`) so the conftest's `monkeypatch.setattr(cache_redis, "get_client", ...)` works. Every future handler that needs a monkeypatchable dependency should look it up via the module, not a bound import. conftest `MIG_DIR` is `__file__`-relative.
+- Task 9 — next: `backend/Dockerfile`, `backend/entrypoint.sh` (migrate→seed→uvicorn), `docker-compose.yml` (backend+redis+caddy), `Caddyfile`. Verify with `docker compose up` → `localhost/healthz` 200. **Needs Docker running.**
