@@ -43,6 +43,8 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **Task 2 `config.py`:** wrote a corrected `sqlite_path` — the plan's draft returned `/./data/...` for the relative 3-slash URL (a bug it flagged with a fallback). Clean rule: strip the scheme prefix, then strip exactly one leading `/`. Added a 4th test for the absolute 4-slash form. (Confirmed pydantic v2 `ValidationError` subclasses `ValueError`, so the short-secret test passes with `pytest.raises(ValueError)`.)
 - **Task 5 paths (cwd-independence):** the plan assumed pytest runs from `backend/` (hardcoded `MIG_DIR="migrations"`), but we run from the repo root. Made `test_migrate.py` resolve `MIG_DIR` via `Path(__file__).parents[1]/"migrations"`, and `migrate.py`'s `__main__` default via `Path(__file__).parents[2]/"migrations"` — both cwd-independent. Same fix will apply to the Task 6 seed CSV path. The `migrate()` function itself takes the dir as a param (unchanged).
 
+- **Repo hygiene (`9-` chore):** the initial commit accidentally tracked Obsidian editor state (`docs/.obsidian/*`, which churns as notes are opened). Added `.obsidian/` to `.gitignore` and `git rm -r --cached docs/.obsidian`. (You use Obsidian on the `docs/` vault — its workspace files are editor cruft, not project content.)
+
 ## Task changelog
 - **Task 1 ✅** (`75ae3b8`) — git init on `main`; `.gitignore`; `backend/pyproject.toml`; `app` package; pytest harness; smoke test PASS. Working tree clean.
 - **uv switch ✅** (`f5bec05`) — venv now managed by uv; M0 plan + README + handoff updated.
