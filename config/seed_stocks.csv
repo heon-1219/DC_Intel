@@ -1,0 +1,13 @@
+symbol,exchange,region,company_name,company_name_ko,company_group,security_type,currency,board,yfinance_ticker,finnhub_ticker,adr_ratio,xmkt_reference,listing_price_usd
+005930,KRX,KR,Samsung Electronics,삼성전자,samsung-electronics,common,KRW,KOSPI,005930.KS,,,SOXX,
+000660,KRX,KR,SK hynix,SK하이닉스,sk-hynix,common,KRW,KOSPI,000660.KS,,,SOXX,
+005380,KRX,KR,Hyundai Motor,현대차,hyundai-motor,common,KRW,KOSPI,005380.KS,,,,
+035420,KRX,KR,NAVER,네이버,naver,common,KRW,KOSPI,035420.KS,,,,
+AAPL,NASDAQ,US,Apple Inc.,애플,apple,common,USD,,AAPL,AAPL,,^N225,
+NVDA,NASDAQ,US,NVIDIA Corporation,엔비디아,nvidia,common,USD,,NVDA,NVDA,,SOXX,
+PKX,NYSE,US,POSCO Holdings (ADR),포스코홀딩스 ADR,posco-holdings,adr,USD,,PKX,PKX,1,005490:KRX,
+KOSPI,INDEX,KR,KOSPI,코스피,,index,KRW,,^KS11,,,,
+NASDAQ_COMPOSITE,INDEX,US,NASDAQ Composite,나스닥 종합,,index,USD,,^IXIC,,,,
+SP500,INDEX,US,S&P 500,S&P 500,,index,USD,,^GSPC,,,,
+NIKKEI225,INDEX,JP,Nikkei 225,니케이 225,,index,JPY,,^N225,,,,
+DAX,INDEX,DE,DAX,닥스,,index,EUR,,^GDAXI,,,,

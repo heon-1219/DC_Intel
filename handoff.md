@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current task:** Tasks 4 + 5 ✅ DONE (commit pending this turn). **Next: Task 6** (`db/seed.py` + `config/seed_stocks.csv`).
+- **Current task:** Task 6 ✅ DONE (commit pending this turn). **Next: Task 7** (`cache/redis.py` — async client + `{data, meta}` envelope).
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
 - **Branch:** `main` (fresh repo, git init'd in Task 1).
 
@@ -51,4 +51,5 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **Task 2 ✅** (`de94aa2`) — `config.py` (pydantic-settings, JWT_SECRET ≥32 validation, corrected `sqlite_path`) + `test_config.py` (4 tests). Full suite: **5 passed**.
 - **Task 3 ✅** (`e836efc`) — `db/connection.py` (`connect()` async ctx mgr applying WAL/synchronous/busy_timeout/foreign_keys pragmas; `aiosqlite.Row` factory) + `test_connection.py`. Full suite: **6 passed**.
 - **Tasks 4 + 5 ✅** — `migrations/001_initial_schema.sql` (9 tables + indexes, verbatim from `schema.md` §3) and `db/migrate.py` (numbered-SQL runner, `schema_migrations`, one-txn-per-file) + `test_migrate.py` (3 tests: all tables created, idempotent, CHECK rejects bad timeframe). Full suite: **9 passed**. Also smoke-tested the `python -m app.db.migrate` CLI (the Docker entrypoint path): applies then idempotent.
-- Task 6 — next: `db/seed.py` + `config/seed_stocks.csv` (idempotent stock-universe seed; use `__file__`-relative CSV path).
+- **Task 6 ✅** — `config/seed_stocks.csv` (12 real rows: 4 KRX + AAPL/NVDA + PKX ADR + 5 index pseudo-rows) and `db/seed.py` (insert only if `stocks` empty; ""→NULL; `__file__`-relative `__main__` CSV path = `parents[3]/config`, works locally and in-container where config sits beside backend/). `test_seed.py` (4 tests: populates ≥12, idempotent, resolves 005930→005930.KS, empty→NULL + adr coercion). Full suite: **13 passed**. Seed CLI smoke-tested (seeded 12 → idempotent).
+- Task 7 — next: `cache/redis.py` (async Redis client via redis.asyncio + `ping` + `make_envelope`; test with fakeredis).
