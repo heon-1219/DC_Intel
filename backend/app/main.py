@@ -5,10 +5,12 @@ from fastapi import FastAPI
 
 from app.cache import redis as cache_redis
 from app.config import get_settings
+from app.jobs.indicator_calculator import recompute_indicators
 from app.jobs.price_poller import poll_indexes, poll_region
 from app.providers.breaker import CircuitBreaker
 from app.providers.finnhub_provider import FinnhubProvider
 from app.providers.pykrx_provider import PykrxProvider
+from app.providers.yfinance_bars import YFinanceBarProvider
 from app.providers.yfinance_provider import YFinanceProvider
 from app.routers import health, stocks
 from app.scheduler import build_scheduler
@@ -24,6 +26,7 @@ async def lifespan(app: FastAPI):
     yf = YFinanceProvider()
     fh = FinnhubProvider(settings.finnhub_api_key)
     pk = PykrxProvider()
+    bars = YFinanceBarProvider()
 
     async def _krx():
         await poll_region(settings.sqlite_path, "KR", redis, breaker, yfinance=yf, finnhub=fh, pykrx=pk)
@@ -38,8 +41,12 @@ async def lifespan(app: FastAPI):
         await redis.set("ops:heartbeat",
                         datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
+    async def _ind():
+        await recompute_indicators(settings.sqlite_path, redis, breaker, bars_provider=bars)
+
     sched = build_scheduler(run=True, jobs={
-        "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx, "heartbeat": _hb})
+        "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
+        "heartbeat": _hb, "recompute_indicators": _ind})
     try:
         yield
     finally:
