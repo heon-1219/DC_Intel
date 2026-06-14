@@ -179,9 +179,13 @@ def bollinger_state(percent_b: pd.Series, bandwidth: pd.Series) -> str:
 
 def bollinger_squeeze(bandwidth: pd.Series, window: int = 120, min_bars: int = 140):
     """True if current bandwidth is the lowest in the trailing `window` bars. None if
-    fewer than `min_bars` of history (§7.3)."""
+    fewer than `min_bars` of RAW history (§7.3: 140 = 120-bar window + 20-bar SMA seed).
+    `bandwidth` carries one entry per raw bar (NaN for the first 19), so the floor gates
+    on len(bandwidth) — NOT on the dropna count, which would demand 19 extra bars."""
+    if len(bandwidth) < min_bars:
+        return None
     bw = bandwidth.dropna()
-    if len(bw) < min_bars:
+    if bw.empty:
         return None
     trailing = bw.iloc[-window:]
     return bool(bw.iloc[-1] <= trailing.min())
@@ -211,10 +215,6 @@ def _scalar(series_or_val):
     else:
         v = float(series_or_val)
     return None if (v != v) else v   # NaN guard
-
-
-def _round(v, ndigits):
-    return None if v is None else round(v, ndigits)
 
 
 def compute_indicators(bars: pd.DataFrame, *, bar_interval: str,
@@ -249,7 +249,7 @@ def compute_indicators(bars: pd.DataFrame, *, bar_interval: str,
         ema200_v if ema200_v is not None else float("nan"))
 
     def _vs(ref):
-        return round((c_t - ref) / ref * 100, 4) if ref else None
+        return (c_t - ref) / ref * 100 if ref else None   # full precision per §2
 
     # MACD
     macd_line, macd_signal_s, macd_hist = macd(close)
@@ -257,20 +257,23 @@ def compute_indicators(bars: pd.DataFrame, *, bar_interval: str,
     macd_signal_v = _scalar(macd_signal_s)
     macd_hist_v = _scalar(macd_hist)
     hist_clean = macd_hist.dropna()
-    macd_hist_delta = (round(float(hist_clean.iloc[-1] - hist_clean.iloc[-2]), 6)
+    macd_hist_delta = (float(hist_clean.iloc[-1] - hist_clean.iloc[-2])
                        if len(hist_clean) >= 2 else None)
     macd_cross_dir, bars_since_macd_cross = crossover(macd_line, macd_signal_s)
     zero = pd.Series(0.0, index=macd_line.index)
     zc_dir, bs_zc = crossover(macd_line, zero)
     macd_st = macd_state(cross_dir=macd_cross_dir, bars_since_cross=bars_since_macd_cross,
                          zero_cross_dir=zc_dir, bars_since_zero_cross=bs_zc, hist=macd_hist)
-    macd_line_pct = round(macd_line_v / c_t * 100, 6) if macd_line_v is not None else None
+    macd_line_pct = macd_line_v / c_t * 100 if macd_line_v is not None else None
 
     # Bollinger
     bb_mid, bb_up, bb_low, bb_pctb, bb_bw = bollinger(close)
     bb_state_v = bollinger_state(bb_pctb, bb_bw)
     bb_squeeze_v = bollinger_squeeze(bb_bw)
-    if bb_squeeze_v and bb_state_v == "inside":
+    bb_squeeze_prev = bollinger_squeeze(bb_bw.iloc[:-1])   # squeeze on the prior bar
+    if bb_state_v == "breakout_up" and (bb_squeeze_v or bb_squeeze_prev):
+        bb_state_v = "squeeze_breakout_up"   # breakout ending a squeeze — §7.3/§7.4 headline
+    elif bb_squeeze_v and bb_state_v == "inside":
         bb_state_v = "squeeze"
 
     # Volume
@@ -282,9 +285,13 @@ def compute_indicators(bars: pd.DataFrame, *, bar_interval: str,
         vol_z_v = _scalar(vol_z20(volume))
         vol_st = (vol_state(vol_z_v, first_bar_of_session=first_bar_of_session)
                   if vol_z_v is not None else None)
+        # stale_price: 20 identical volumes (VolStd=0), even if prices still move (§7A.1)
+        if float(volume.tail(20).std(ddof=0)) == 0 and "stale_price" not in flags:
+            flags.append("stale_price")
 
     # stale_price: flat closes (RSI pinned to 50 by the flat-series rule)
-    if n >= 15 and rsi_val == 50.0 and close.tail(15).nunique() == 1:
+    if (n >= 15 and rsi_val == 50.0 and close.tail(15).nunique() == 1
+            and "stale_price" not in flags):
         flags.append("stale_price")
     # limit_lock: >=5 consecutive bars with high == low (KRX limit lock, §9.4)
     if n >= 5:
@@ -293,25 +300,26 @@ def compute_indicators(bars: pd.DataFrame, *, bar_interval: str,
         if bool(hl_equal.tail(5).all()):
             flags.append("limit_lock")
 
+    # Stored at full float precision per §2; display rounding is the UI/copy layer's job.
     return {
-        "rsi_14": _round(rsi_val, 4),
+        "rsi_14": rsi_val,
         "rsi_state": rsi_state(rsi_val) if rsi_val is not None else None,
-        "ema_5": _round(ema5_v, 6), "ema_20": _round(ema20_v, 6),
-        "ema_50": _round(ema50_v, 6), "ema_200": _round(ema200_v, 6),
+        "ema_5": ema5_v, "ema_20": ema20_v,
+        "ema_50": ema50_v, "ema_200": ema200_v,
         "ema_200_available": bool(ema200_available), "warming_up": bool(warming_up),
         "ema_5_20_cross_dir": cd_5_20, "bars_since_ema_5_20_cross": bs_5_20,
         "ema_50_200_cross_dir": cd_50_200, "bars_since_ema_50_200_cross": bs_50_200,
         "price_vs_ema20_pct": _vs(ema20_v), "price_vs_ema50_pct": _vs(ema50_v),
         "price_vs_ema200_pct": _vs(ema200_v),
         "ema_stack_bullish": stack_bull, "ema_stack_bearish": stack_bear,
-        "macd_line": _round(macd_line_v, 6), "macd_signal": _round(macd_signal_v, 6),
-        "macd_histogram": _round(macd_hist_v, 6), "macd_hist_delta": macd_hist_delta,
+        "macd_line": macd_line_v, "macd_signal": macd_signal_v,
+        "macd_histogram": macd_hist_v, "macd_hist_delta": macd_hist_delta,
         "macd_line_pct": macd_line_pct, "macd_state": macd_st,
         "bars_since_macd_cross": bars_since_macd_cross,
-        "bb_middle": _round(_scalar(bb_mid), 6), "bb_upper": _round(_scalar(bb_up), 6),
-        "bb_lower": _round(_scalar(bb_low), 6), "bb_percent_b": _round(_scalar(bb_pctb), 6),
-        "bb_bandwidth": _round(_scalar(bb_bw), 6), "bb_state": bb_state_v,
+        "bb_middle": _scalar(bb_mid), "bb_upper": _scalar(bb_up),
+        "bb_lower": _scalar(bb_low), "bb_percent_b": _scalar(bb_pctb),
+        "bb_bandwidth": _scalar(bb_bw), "bb_state": bb_state_v,
         "bb_squeeze": bb_squeeze_v,
-        "vol_z20": _round(vol_z_v, 4), "vol_state": vol_st,
+        "vol_z20": vol_z_v, "vol_state": vol_st,
         "flags": flags,
     }

@@ -214,6 +214,7 @@ ema_stack_bearish   = (EMA5 < EMA20 < EMA50 < EMA200)
 | Golden cross (daily bars only) | `Golden cross (50/200) → long-term trend turning up` | `골든 크로스 (50/200) → 장기 추세 상승 전환` |
 | Death cross (daily bars only) | `Death cross (50/200) → long-term trend turning down` | `데드 크로스 (50/200) → 장기 추세 하락 전환` |
 | EMA50×200 up-cross on intraday bars | `Trend shift up on short charts → strengthening` | `단기 차트 추세 상승 전환 → 강세 강화` |
+| EMA50×200 down-cross on intraday bars | `Trend shift down on short charts → weakening` | `단기 차트 추세 하락 전환 → 약세 심화` |
 | Price > EMA20 by ≥1% with bullish stack | `Price riding above its averages → uptrend intact` | `이동평균선 위 주행 → 상승 추세 유지` |
 | Price < EMA20 by ≥1% with bearish stack | `Price sinking below its averages → downtrend intact` | `이동평균선 아래 주행 → 하락 추세 유지` |
 

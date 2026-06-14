@@ -50,6 +50,7 @@ _SHORT = {
     ("macd", "bearish_cross"): ("MACD momentum down", "MACD 모멘텀 하락"),
     ("bollinger", "breakout_up"):   ("Range breakout up", "범위 상향 돌파"),
     ("bollinger", "breakout_down"): ("Range breakout down", "범위 하향 이탈"),
+    ("bollinger", "squeeze_breakout_up"): ("Squeeze breakout up", "스퀴즈 상향 돌파"),
 }
 
 # state -> direction for color semantics (green=up, red=down, gray=neutral). §12.
@@ -63,6 +64,7 @@ _DIRECTION = {
     ("bollinger", "breakout_up"): "up", ("bollinger", "breakout_down"): "down",
     ("bollinger", "riding_upper"): "up", ("bollinger", "riding_lower"): "down",
     ("bollinger", "squeeze"): "neutral", ("bollinger", "inside"): "neutral",
+    ("bollinger", "squeeze_breakout_up"): "up",
 }
 
 

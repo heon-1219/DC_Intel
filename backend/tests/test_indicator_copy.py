@@ -20,6 +20,14 @@ def test_ema_cross_copy_intraday_vs_daily_naming():
     assert "골든 크로스" in copy.ema_cross_copy(50, 200, 1, "1d", "ko")
 
 
+def test_ema_intraday_down_cross_copy():
+    # §5.4 — symmetric intraday EMA50x200 down-cross (no golden/death naming intraday).
+    assert copy.ema_cross_copy(50, 200, -1, "5m", "en") == \
+        "Trend shift down on short charts → weakening"
+    assert copy.ema_cross_copy(50, 200, -1, "1h", "ko") == \
+        "단기 차트 추세 하락 전환 → 약세 심화"
+
+
 def test_ema_short_cross_copy():
     assert copy.ema_cross_copy(5, 20, 1, "5m", "en") == \
         "Short-term momentum turned up (5/20 cross) → upward push"
