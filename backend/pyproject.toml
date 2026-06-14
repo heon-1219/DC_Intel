@@ -17,6 +17,8 @@ dependencies = [
     "pykrx>=1.0.45",
     "tzdata>=2024.1",
     "apscheduler>=3.10",
+    "pandas>=2.0",
+    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]
