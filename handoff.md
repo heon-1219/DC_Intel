@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current state:** **M1a CODE-COMPLETE** (Tasks 0–11 ✅; 56 tests + 2 live). ⏳ **Docker smoke DEFERRED** — Docker Desktop daemon wouldn't start this session (launched it, daemon not ready after 180s). Re-run when Docker is up: `docker compose up -d --build`, wait ~70s, `GET http://localhost/stocks/005930:KRX/price` → 200 real price; also `/stocks/KOSPI... ` no (INDEX not addressable). **Next: M1b** (write plan + execute). **Cadence: stop at MILESTONES.** (M0 complete + pushed.)
+- **Current state:** M1a CODE-COMPLETE (⏳ docker smoke deferred — daemon wouldn't start). **M1b IN PROGRESS** — plan `docs/superpowers/plans/2026-06-13-dc-intel-m1b-cross-market.md` (4 tasks); **T1 ✅** (FX provider + cache). Per-task progress = git log. **Cadence: stop at MILESTONES** (report at end of M1 = M1a+M1b done + combined docker smoke). 59 tests + 3 live.
 - **Remote:** `origin` = https://github.com/heon-1219/DC_Intel.git (gh authed as heon-1219; `git push` works). `main` tracks `origin/main`. Push after milestones (or per commit).
 - **Run the stack:** `docker compose up -d --build` → http://localhost/healthz = 200. Stop: `docker compose down` (the `dbdata` named volume persists the SQLite DB across down/up). First build ~1–2 min.
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
