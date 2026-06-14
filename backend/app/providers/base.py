@@ -12,6 +12,8 @@ class StockRef:
     currency: str
     yfinance_ticker: str
     finnhub_ticker: str | None
+    company_name: str | None = None       # trailing/defaulted: positional construction unaffected
+    company_name_ko: str | None = None
 
 
 @dataclass(frozen=True)

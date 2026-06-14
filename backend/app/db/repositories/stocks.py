@@ -1,13 +1,26 @@
+from dataclasses import dataclass
+
 from app.providers.base import StockRef
 
-_COLS = "id, symbol, exchange, region, currency, yfinance_ticker, finnhub_ticker"
+_COLS = ("id, symbol, exchange, region, currency, yfinance_ticker, finnhub_ticker, "
+         "company_name, company_name_ko")
+
+
+@dataclass(frozen=True)
+class Listing:
+    instrument: str
+    symbol: str
+    exchange: str
+    currency: str
+    adr_ratio: float | None
 
 
 def _row_to_ref(row) -> StockRef:
     return StockRef(
         id=row["id"], symbol=row["symbol"], exchange=row["exchange"], region=row["region"],
         currency=row["currency"], yfinance_ticker=row["yfinance_ticker"],
-        finnhub_ticker=row["finnhub_ticker"],
+        finnhub_ticker=row["finnhub_ticker"], company_name=row["company_name"],
+        company_name_ko=row["company_name_ko"],
     )
 
 
@@ -34,3 +47,36 @@ async def list_active_indexes(con) -> list[StockRef]:
         f"SELECT {_COLS} FROM stocks WHERE is_active = 1 AND security_type = 'index'"
     )
     return [_row_to_ref(r) for r in await cur.fetchall()]
+
+
+async def get_company_listings(con, symbol: str, exchange: str):
+    """For the company owning {symbol}:{exchange}, return (names, [Listing]) across all its
+    listings (those sharing company_group, else just the one). None if the base is unknown."""
+    cur = await con.execute(
+        "SELECT company_group, company_name, company_name_ko FROM stocks "
+        "WHERE symbol = ? AND exchange = ? AND is_active = 1",
+        (symbol, exchange),
+    )
+    base = await cur.fetchone()
+    if base is None:
+        return None
+    names = {"en": base["company_name"], "ko": base["company_name_ko"]}
+    group = base["company_group"]
+    if group:
+        cur = await con.execute(
+            "SELECT symbol, exchange, currency, adr_ratio FROM stocks "
+            "WHERE company_group = ? AND is_active = 1 ORDER BY symbol",
+            (group,),
+        )
+    else:
+        cur = await con.execute(
+            "SELECT symbol, exchange, currency, adr_ratio FROM stocks "
+            "WHERE symbol = ? AND exchange = ? AND is_active = 1",
+            (symbol, exchange),
+        )
+    listings = [
+        Listing(instrument=f"{r['symbol']}:{r['exchange']}", symbol=r["symbol"],
+                exchange=r["exchange"], currency=r["currency"], adr_ratio=r["adr_ratio"])
+        for r in await cur.fetchall()
+    ]
+    return names, listings
