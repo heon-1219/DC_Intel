@@ -49,6 +49,12 @@ async def list_active_indexes(con) -> list[StockRef]:
     return [_row_to_ref(r) for r in await cur.fetchall()]
 
 
+async def list_active_all(con) -> list[StockRef]:
+    """Every active stock incl. index pseudo-rows — the indicator job's scope."""
+    cur = await con.execute(f"SELECT {_COLS} FROM stocks WHERE is_active = 1")
+    return [_row_to_ref(r) for r in await cur.fetchall()]
+
+
 async def get_company_listings(con, symbol: str, exchange: str):
     """For the company owning {symbol}:{exchange}, return (names, [Listing]) across all its
     listings (those sharing company_group, else just the one). None if the base is unknown."""
