@@ -14,3 +14,19 @@ class FakeProvider:
             raise self._error
         assert self._quote is not None
         return self._quote
+
+
+class FakeBarProvider:
+    def __init__(self, name="yfinance_bars", bars=None, error: Exception | None = None):
+        self.name = name
+        self._bars = bars        # a pandas DataFrame, or a dict interval -> DataFrame
+        self._error = error
+        self.calls = 0
+
+    async def fetch_bars(self, ref, interval):
+        self.calls += 1
+        if self._error is not None:
+            raise self._error
+        if isinstance(self._bars, dict):
+            return self._bars[interval]
+        return self._bars
