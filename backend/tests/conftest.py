@@ -4,6 +4,7 @@ import fakeredis.aioredis
 import pytest
 
 MIG_DIR = str(Path(__file__).resolve().parents[1] / "migrations")
+SEED_CSV = str(Path(__file__).resolve().parents[2] / "config" / "seed_stocks.csv")
 
 
 @pytest.fixture
@@ -18,6 +19,8 @@ def app_client(tmp_path, monkeypatch):
 
     from app.db.migrate import migrate
     migrate(get_settings().sqlite_path, MIG_DIR)
+    from app.db.seed import seed_stocks
+    seed_stocks(get_settings().sqlite_path, SEED_CSV)
 
     # Patch the module attribute so handlers that call cache_redis.get_client() see the fake.
     import app.cache.redis as cache_redis

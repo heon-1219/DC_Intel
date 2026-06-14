@@ -5,7 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current state:** **M1a IN PROGRESS** — Tasks 0–9 ✅ (data layer + service + poller). **Next: Task 10** (`GET /stocks/{i}/price` endpoint; **conftest `app_client` fixture must also seed stocks** — see plan Task 10). 50 tests pass (+2 live). Cadence: task-by-task. (M0 complete + pushed.)
+- **Current state:** **M1a IN PROGRESS** — Tasks 0–9 ✅. **Next: Task 10** then 11 to finish M1a, then write + execute M1b. **Cadence: stop at MILESTONES** (owner, effective now) — push through tasks, commit + update handoff per task, check in only at milestone boundaries. 50 tests pass (+2 live). (M0 complete + pushed.)
 - **Remote:** `origin` = https://github.com/heon-1219/DC_Intel.git (gh authed as heon-1219; `git push` works). `main` tracks `origin/main`. Push after milestones (or per commit).
 - **Run the stack:** `docker compose up -d --build` → http://localhost/healthz = 200. Stop: `docker compose down` (the `dbdata` named volume persists the SQLite DB across down/up). First build ~1–2 min.
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
@@ -71,4 +71,5 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
   - **Task 7 ✅** — `core/instrument.py` (`parse_instrument` → uppercased `(SYMBOL, EXCHANGE)`; rejects bad/`INDEX`/malformed) + `db/repositories/stocks.py` (`get_stock`, `list_active_by_region` excluding index rows). 9 tests. **43 pass.**
   - **Task 8 ✅** — `services/price.py`: `provider_chain(region)` (KR→yf,pykrx · US→yf,finnhub · else yf), `fetch_and_cache` (skips open-breaker providers, falls through chain, writes `px:quote:{symbol}:{exchange}` JSON w/ as_of+source, records breaker success/failure, returns None if all fail), `read_cached`, `is_stale` (>5min when open, never when closed). 5 tests. **48 pass.**
   - **Task 9 ✅** — `jobs/price_poller.py` `poll_region(...)`: reads the region's active non-index stocks (releases the DB conn before fetching), fetch+caches each via the chain, returns success count. 2 tests. **50 pass.**
-  - **Next: Task 10** `routers/stocks.py` `GET /stocks/{i}/price` (parse → resolve stock (404) → read `px:quote` (404 if uncached) → compute change/market_state/is_stale → envelope; mount in main.py). **Also update `conftest.py` `app_client` to `seed_stocks(...)` after migrate** so symbols resolve. → 11 scheduler (+docker smoke).
+  - **Task 10 ✅** — `routers/stocks.py` `GET /stocks/{i}/price` (parse → resolve (404) → read `px:quote` (404 if uncached) → change/market_state/is_stale → `{data,meta}` envelope; mounted in main.py). conftest `app_client` now seeds stocks. 4 tests. **54 pass.** (name_en/ko are symbol placeholders — names in M1b.)
+  - **Next: Task 11** APScheduler wiring (`app/scheduler.py` + main.py lifespan binding real providers/redis/breaker + heartbeat writer) + `/healthz` heartbeat check; then `docker compose up` price smoke. Finishes M1a.
