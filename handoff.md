@@ -5,8 +5,7 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 ## TL;DR — where we are right now
 - **Phase:** 4 (implementation). Docs approved; building.
 - **Milestone:** M0 — Foundation & scaffolding.
-- **Current state:** 🎉 **M1 CODE-COMPLETE** (M1a live `/price` + M1b cross-market `/prices-across-markets`). **68 tests pass + 3 live validated** (yfinance, pykrx, FX). All pushed (`…69b5f37`). ⛔ **Combined docker smoke BLOCKED** — Docker Desktop daemon won't start this machine (launched, no daemon after 10+ min; likely needs user interaction). **Next: M2 — technical indicators.** Cadence: stop at MILESTONES.
-- **TO RUN THE DOCKER SMOKE (needs the owner to start Docker Desktop):** `docker compose up -d --build`; wait ~70s for a poll cycle; `curl http://localhost/stocks/005930:KRX/price` → 200 real price; `curl http://localhost/stocks/005930:KRX/prices-across-markets` → 200.
+- **Current state:** 🎉 **M1 FULLY COMPLETE** — M1a live `/price` + M1b cross-market `/prices-across-markets`. **68 tests + 3 live + docker smoke ALL PASSED.** Docker smoke (2026-06-14): `docker compose up --build` → /healthz 200 (scheduler:true), poller cached all 12 `px:quote` keys from real yfinance, `/price` 005930:KRX → ₩322,500 real, `/prices-across-markets` → normalized_usd 212.47 @ USDKRW 1517.89. All pushed. **Next: M2 — technical indicators.** Cadence: stop at MILESTONES.
 - **Remote:** `origin` = https://github.com/heon-1219/DC_Intel.git (gh authed as heon-1219; `git push` works). `main` tracks `origin/main`. Push after milestones (or per commit).
 - **Run the stack:** `docker compose up -d --build` → http://localhost/healthz = 200. Stop: `docker compose down` (the `dbdata` named volume persists the SQLite DB across down/up). First build ~1–2 min.
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
