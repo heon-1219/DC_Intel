@@ -27,3 +27,10 @@ async def list_active_by_region(con, region: str) -> list[StockRef]:
         (region,),
     )
     return [_row_to_ref(r) for r in await cur.fetchall()]
+
+
+async def list_active_indexes(con) -> list[StockRef]:
+    cur = await con.execute(
+        f"SELECT {_COLS} FROM stocks WHERE is_active = 1 AND security_type = 'index'"
+    )
+    return [_row_to_ref(r) for r in await cur.fetchall()]

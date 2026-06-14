@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     model_dir: str = "/data/models"
     twitter_enabled: bool = True
+    finnhub_api_key: str = ""  # US fallback quote provider; chain degrades gracefully if unset
 
     @field_validator("jwt_secret")
     @classmethod
