@@ -11,6 +11,7 @@ from app.calendar.providers.investing_provider import InvestingProvider
 from app.calendar.providers.seed_provider import SeedProvider
 from app.config import get_settings
 from app.jobs.calendar_sync import sync_calendar
+from app.jobs.event_study import econ_event_study
 from app.jobs.indicator_calculator import recompute_indicators
 from app.jobs.price_poller import poll_indexes, poll_region
 from app.providers.breaker import CircuitBreaker
@@ -64,9 +65,13 @@ async def lifespan(app: FastAPI):
         await backfill_actuals(settings.sqlite_path, redis, breaker, providers=cal_providers,
                                registry_path=reg_path, sectors_path=sec_path)
 
+    async def _study():
+        await econ_event_study(settings.sqlite_path, bars, registry_path=reg_path)
+
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
-        "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal})
+        "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal,
+        "econ_event_study": _study})
     try:
         yield
     finally:

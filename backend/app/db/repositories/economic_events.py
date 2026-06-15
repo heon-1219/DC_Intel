@@ -78,6 +78,23 @@ async def list_pending_actuals(con, before_utc: str) -> list[dict]:
     return [dict(r) for r in await cur.fetchall()]
 
 
+async def list_released_occurrences(con, event_type: str, since_utc: str) -> list[dict]:
+    """Past released occurrences of an event_type within the lookback (event-study, §8)."""
+    cur = await con.execute(
+        f"SELECT {_COLS} FROM economic_events WHERE event_type=? AND status='released' "
+        "AND event_time >= ? ORDER BY event_time ASC",
+        [event_type, since_utc])
+    return [dict(r) for r in await cur.fetchall()]
+
+
+async def update_history(con, event_id: int, affected_json: dict) -> None:
+    """Write the event-study history back into affected_stocks_json (§8.6)."""
+    await con.execute(
+        "UPDATE economic_events SET affected_stocks_json=?, updated_at=? WHERE id=?",
+        [json.dumps(affected_json), _now_iso(), event_id])
+    await con.commit()
+
+
 async def mark_cancelled(con, ids: list[int]) -> None:
     if not ids:
         return

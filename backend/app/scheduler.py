@@ -7,9 +7,11 @@ JOB_INTERVALS = {
     "poll_prices_krx": 1, "poll_prices_us": 1, "poll_indexes": 1,
     "heartbeat": 1, "recompute_indicators": 5,
 }
-# job id -> daily cron (UTC). sync_calendar at 21:30 UTC = 06:30 KST (economic-calendar.md §11.1).
+# job id -> daily cron (UTC). sync_calendar 21:30 UTC = 06:30 KST (§11.1);
+# econ_event_study 02:00 UTC after the sync (§11.4).
 JOB_CRONS = {
     "sync_calendar": {"hour": 21, "minute": 30},
+    "econ_event_study": {"hour": 2, "minute": 0},
 }
 JOB_IDS = list(JOB_INTERVALS) + list(JOB_CRONS)
 
