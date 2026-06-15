@@ -1,10 +1,16 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import FastAPI
 
 from app.cache import redis as cache_redis
+from app.calendar.providers.finnhub_calendar_provider import FinnhubCalendarProvider
+from app.calendar.providers.fred_provider import FredProvider
+from app.calendar.providers.investing_provider import InvestingProvider
+from app.calendar.providers.seed_provider import SeedProvider
 from app.config import get_settings
+from app.jobs.calendar_sync import sync_calendar
 from app.jobs.indicator_calculator import recompute_indicators
 from app.jobs.price_poller import poll_indexes, poll_region
 from app.providers.breaker import CircuitBreaker
@@ -44,9 +50,20 @@ async def lifespan(app: FastAPI):
     async def _ind():
         await recompute_indicators(settings.sqlite_path, redis, breaker, bars_provider=bars)
 
+    config_dir = str(Path(__file__).resolve().parents[2] / "config")
+    reg_path = str(Path(config_dir) / "economic_events.yaml")
+    sec_path = str(Path(config_dir) / "sectors.yaml")
+    cal_providers = [InvestingProvider(), SeedProvider(config_dir),
+                     FredProvider(settings.fred_api_key),
+                     FinnhubCalendarProvider(settings.finnhub_api_key)]
+
+    async def _cal():
+        await sync_calendar(settings.sqlite_path, redis, breaker, providers=cal_providers,
+                            registry_path=reg_path, sectors_path=sec_path)
+
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
-        "heartbeat": _hb, "recompute_indicators": _ind})
+        "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal})
     try:
         yield
     finally:
