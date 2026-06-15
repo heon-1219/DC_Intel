@@ -51,7 +51,7 @@ events:
       ko: "한국 중앙은행이 기준금리를 정해요. 한국 주식에 직접적인 영향을 줘요."
     country: KR
     provider_match:
-      investing_com: ["BoK Interest Rate Decision", "Interest Rate Decision"]
+      investing_com: ["BoK Interest Rate Decision"]
     impact_override: high
     surprise_polarity: -1
     neutral_band_abs: 0.0

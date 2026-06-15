@@ -31,6 +31,12 @@ def canonicalize(raw: RawEvent, registry: dict, sectors: dict,
     # Seeds carry their event_type directly; providers match by name.
     etype = raw.extra.get("event_type") or match_event_type(registry, raw.provider, raw.raw_name)
     entry = registry.get(etype) if etype else None
+    # Country cross-check: a name-matched entry must agree on country, so an over-generic
+    # alias (e.g. "Interest Rate Decision") can't mislabel another country's event. Seeds
+    # (explicit event_type) bypass this guard.
+    if (entry and not raw.extra.get("event_type")
+            and entry.get("country") and entry["country"] != raw.country):
+        etype, entry = None, None
     if not etype:
         etype = auto_slug(raw.country, raw.raw_name)
     impact, impact_src = assign_impact(entry, raw.importance)

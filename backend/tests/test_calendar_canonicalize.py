@@ -64,6 +64,14 @@ def test_canonicalize_earnings_megacap_vs_other():
     assert canonicalize(other, REGISTRY, SECTORS, MEGA).impact_level == "medium"
 
 
+def test_canonicalize_country_guard_rejects_mismatched_alias():
+    # A non-KR event must NOT canonicalize to kr_* even if a name alias would match.
+    raw = RawEvent("investing_com", "9", "BoK Interest Rate Decision", "JP", T, importance=3)
+    ce = canonicalize(raw, REGISTRY, SECTORS, MEGA)
+    assert not ce.event_type.startswith("kr_")          # country guard kicked in
+    assert ce.event_type == "jp_bok_interest_rate_decision"   # auto-slugged under JP
+
+
 def test_canonicalize_seed_uses_event_type_from_extra():
     raw = RawEvent("seed", "fomc-2026-06-17", "Fed Interest Rate Decision", "US", T,
                    time_estimated=False, extra={"event_type": "us_fomc_rate_decision"})
