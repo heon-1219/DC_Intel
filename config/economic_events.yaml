@@ -1,0 +1,225 @@
+# Canonical economic-event registry (economic-calendar.md §4).
+# Each key is a canonical event_type. provider_match aliases canonicalize raw provider
+# names. impact_override feeds §5; surprise_polarity/neutral_band_abs feed §7; affected feeds §6.
+# Mega-cap 'high' earnings tickers (§5.1) — edited in one place, referenced by the sync job.
+mega_cap_high: [AAPL, MSFT, NVDA, GOOGL, AMZN, META, TSLA, AVGO, "005930", "000660"]
+
+events:
+  us_cpi:
+    titles:
+      en: "US Consumer Prices (CPI)"
+      ko: "미국 소비자물가지수(CPI)"
+    plain_summary:
+      en: "Shows whether everyday prices in the US rose faster or slower than experts expected. Faster than expected is usually bad for stocks."
+      ko: "미국 물가가 전문가 예상보다 빨리 올랐는지 보여줘요. 예상보다 빠르면 보통 주식에 안 좋은 소식이에요."
+    country: US
+    provider_match:
+      investing_com: ["CPI (YoY)", "CPI (MoM)", "Core CPI (YoY)", "Core CPI (MoM)"]
+      fred: ["Consumer Price Index"]
+    impact_override: high
+    surprise_polarity: -1
+    neutral_band_abs: 0.05
+    affected:
+      indexes: [SP500, NASDAQ_COMPOSITE, KOSPI]
+      sectors: []
+      stocks: []
+
+  us_fomc_rate_decision:
+    titles:
+      en: "US Fed Interest Rate Decision (FOMC)"
+      ko: "미국 연준 기준금리 결정 (FOMC)"
+    plain_summary:
+      en: "The US central bank decides interest rates. One of the biggest market-moving events anywhere."
+      ko: "미국 중앙은행이 금리를 결정해요. 전 세계 주식시장을 가장 크게 움직이는 이벤트 중 하나예요."
+    country: US
+    provider_match:
+      investing_com: ["Fed Interest Rate Decision", "FOMC Interest Rate Decision"]
+    impact_override: high
+    surprise_polarity: -1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [SP500, NASDAQ_COMPOSITE, KOSPI, NIKKEI225, DAX]
+      sectors: [{code: banks_us}]
+      stocks: []
+
+  kr_bok_rate_decision:
+    titles:
+      en: "Bank of Korea Interest Rate Decision"
+      ko: "한국은행 기준금리 결정"
+    plain_summary:
+      en: "Korea's central bank sets its base rate. A direct driver of Korean stocks."
+      ko: "한국 중앙은행이 기준금리를 정해요. 한국 주식에 직접적인 영향을 줘요."
+    country: KR
+    provider_match:
+      investing_com: ["BoK Interest Rate Decision", "Interest Rate Decision"]
+    impact_override: high
+    surprise_polarity: -1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [KOSPI]
+      sectors: []
+      stocks: []
+
+  jp_boj_rate_decision:
+    titles:
+      en: "Bank of Japan Interest Rate Decision"
+      ko: "일본은행 기준금리 결정"
+    plain_summary:
+      en: "Japan's central bank sets its interest rate. It moves Japanese stocks and often spills over to Korea."
+      ko: "일본 중앙은행이 기준금리를 정해요. 일본 주식이 움직이고 한국 시장에도 영향을 줄 때가 많아요."
+    country: JP
+    provider_match:
+      investing_com: ["BoJ Interest Rate Decision"]
+    impact_override: high
+    surprise_polarity: -1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [NIKKEI225, KOSPI]
+      sectors: []
+      stocks: []
+
+  us_nonfarm_payrolls:
+    titles:
+      en: "US Jobs Report (Nonfarm Payrolls)"
+      ko: "미국 고용 보고서 (비농업 고용)"
+    plain_summary:
+      en: "How many jobs the US added last month. A classic high-volatility event."
+      ko: "미국이 지난달 일자리를 얼마나 늘렸는지 보여줘요. 변동성이 큰 대표적인 이벤트예요."
+    country: US
+    provider_match:
+      investing_com: ["Nonfarm Payrolls", "Non-Farm Payrolls"]
+      fred: ["Employment Situation"]
+    impact_override: high
+    surprise_polarity: 1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [SP500, NASDAQ_COMPOSITE, KOSPI]
+      sectors: []
+      stocks: []
+
+  us_gdp_advance:
+    titles:
+      en: "US GDP (Advance)"
+      ko: "미국 GDP (속보치)"
+    plain_summary:
+      en: "First estimate of how fast the US economy grew. The advance print is the market mover."
+      ko: "미국 경제가 얼마나 빨리 성장했는지 첫 추정치예요. 속보치가 시장을 움직여요."
+    country: US
+    provider_match:
+      investing_com: ["GDP (QoQ)", "GDP Growth Rate"]
+      fred: ["Gross Domestic Product"]
+    impact_override: high
+    surprise_polarity: 1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [SP500, NASDAQ_COMPOSITE]
+      sectors: []
+      stocks: []
+
+  us_retail_sales:
+    titles:
+      en: "US Retail Sales"
+      ko: "미국 소매판매"
+    plain_summary:
+      en: "How much Americans spent in shops last month. Stronger than expected usually helps stocks."
+      ko: "미국 사람들이 지난달 얼마나 소비했는지 보여줘요. 예상보다 많으면 보통 주식에 도움이 돼요."
+    country: US
+    provider_match:
+      investing_com: ["Retail Sales (MoM)", "Core Retail Sales (MoM)"]
+    impact_override: medium
+    surprise_polarity: 1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [SP500, NASDAQ_COMPOSITE]
+      sectors: []
+      stocks: []
+
+  us_ppi:
+    titles:
+      en: "US Producer Prices (PPI)"
+      ko: "미국 생산자물가지수(PPI)"
+    plain_summary:
+      en: "Prices US producers charge. A preview of consumer inflation."
+      ko: "미국 생산자가 받는 가격이에요. 소비자 물가의 선행 지표예요."
+    country: US
+    provider_match:
+      investing_com: ["PPI (MoM)", "PPI (YoY)", "Core PPI (MoM)"]
+    impact_override: medium
+    surprise_polarity: -1
+    neutral_band_abs: 0.05
+    affected:
+      indexes: [SP500, NASDAQ_COMPOSITE]
+      sectors: []
+      stocks: []
+
+  kr_cpi:
+    titles:
+      en: "South Korea Consumer Prices (CPI)"
+      ko: "한국 소비자물가지수(CPI)"
+    plain_summary:
+      en: "Whether everyday prices in Korea rose faster or slower than expected."
+      ko: "한국 물가가 예상보다 빨리 올랐는지 보여줘요."
+    country: KR
+    provider_match:
+      investing_com: ["South Korean CPI (YoY)", "CPI (YoY)  (KR)"]
+    impact_override: medium
+    surprise_polarity: -1
+    neutral_band_abs: 0.05
+    affected:
+      indexes: [KOSPI]
+      sectors: []
+      stocks: []
+
+  kr_unemployment:
+    titles:
+      en: "South Korea Unemployment Rate"
+      ko: "한국 실업률"
+    plain_summary:
+      en: "How many Koreans looking for work couldn't find a job. Lower than expected is usually good for Korean stocks."
+      ko: "일자리를 찾는 사람 중 구하지 못한 비율이에요. 예상보다 낮으면 보통 한국 주식에 좋은 소식이에요."
+    country: KR
+    provider_match:
+      investing_com: ["South Korean Unemployment Rate", "Unemployment Rate  (KR)"]
+    impact_override: medium
+    surprise_polarity: -1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [KOSPI]
+      sectors: []
+      stocks: []
+
+  ecb_rate_decision:
+    titles:
+      en: "ECB Interest Rate Decision"
+      ko: "유럽중앙은행(ECB) 기준금리 결정"
+    plain_summary:
+      en: "The Eurozone central bank sets its interest rate."
+      ko: "유로존 중앙은행이 기준금리를 정해요."
+    country: DE
+    provider_match:
+      investing_com: ["ECB Interest Rate Decision", "Deposit Facility Rate"]
+    impact_override: medium
+    surprise_polarity: -1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [DAX]
+      sectors: []
+      stocks: []
+
+  us_michigan_sentiment:
+    titles:
+      en: "US Consumer Sentiment (Michigan)"
+      ko: "미국 소비자심리지수 (미시간대)"
+    plain_summary:
+      en: "How confident US consumers feel. Higher usually helps stocks."
+      ko: "미국 소비자들이 얼마나 자신감이 있는지 보여줘요. 높으면 보통 주식에 도움이 돼요."
+    country: US
+    provider_match:
+      investing_com: ["Michigan Consumer Sentiment", "Michigan Consumer Sentiment (Prel)"]
+    impact_override: medium
+    surprise_polarity: 1
+    neutral_band_abs: 0.0
+    affected:
+      indexes: [SP500, NASDAQ_COMPOSITE]
+      sectors: []
+      stocks: []

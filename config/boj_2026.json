@@ -1,0 +1,17 @@
+{
+  "event_type": "jp_boj_rate_decision",
+  "country": "JP",
+  "provider": "seed",
+  "time_estimated": true,
+  "_source": "boj.or.jp Scheduled Dates of Monetary Policy Meetings in 2026 — decision on day 2; release time unpublished, ~12:30 JST estimate = 03:30:00Z (JST=UTC+9, no DST)",
+  "events": [
+    {"event_time": "2026-01-23T03:30:00Z", "provider_event_id": "boj-2026-01-23"},
+    {"event_time": "2026-03-19T03:30:00Z", "provider_event_id": "boj-2026-03-19"},
+    {"event_time": "2026-04-28T03:30:00Z", "provider_event_id": "boj-2026-04-28"},
+    {"event_time": "2026-06-16T03:30:00Z", "provider_event_id": "boj-2026-06-16"},
+    {"event_time": "2026-07-31T03:30:00Z", "provider_event_id": "boj-2026-07-31"},
+    {"event_time": "2026-09-18T03:30:00Z", "provider_event_id": "boj-2026-09-18"},
+    {"event_time": "2026-10-30T03:30:00Z", "provider_event_id": "boj-2026-10-30"},
+    {"event_time": "2026-12-18T03:30:00Z", "provider_event_id": "boj-2026-12-18"}
+  ]
+}

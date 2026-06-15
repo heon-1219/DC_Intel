@@ -1,0 +1,17 @@
+{
+  "event_type": "us_fomc_rate_decision",
+  "country": "US",
+  "provider": "seed",
+  "time_estimated": false,
+  "_source": "federalreserve.gov/monetarypolicy/fomccalendars.htm — decision 2:00 PM ET on day 2; EST=19:00Z (Jan/Dec), EDT=18:00Z (Mar-Oct)",
+  "events": [
+    {"event_time": "2026-01-28T19:00:00Z", "provider_event_id": "fomc-2026-01-28"},
+    {"event_time": "2026-03-18T18:00:00Z", "provider_event_id": "fomc-2026-03-18"},
+    {"event_time": "2026-04-29T18:00:00Z", "provider_event_id": "fomc-2026-04-29"},
+    {"event_time": "2026-06-17T18:00:00Z", "provider_event_id": "fomc-2026-06-17"},
+    {"event_time": "2026-07-29T18:00:00Z", "provider_event_id": "fomc-2026-07-29"},
+    {"event_time": "2026-09-16T18:00:00Z", "provider_event_id": "fomc-2026-09-16"},
+    {"event_time": "2026-10-28T18:00:00Z", "provider_event_id": "fomc-2026-10-28"},
+    {"event_time": "2026-12-09T19:00:00Z", "provider_event_id": "fomc-2026-12-09"}
+  ]
+}

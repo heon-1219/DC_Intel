@@ -1,0 +1,53 @@
+# Sector map (economic-calendar.md §6.3). proxy = tradable ticker for event studies;
+# members = tickers ({symbol}:{exchange} for KRX) used for alert matching.
+sectors:
+  semiconductors:
+    name_en: Semiconductors
+    name_ko: 반도체
+    proxy: "SOXX:NASDAQ"
+    members: [NVDA, AMD, AVGO, MU, "005930:KRX", "000660:KRX"]
+  banks_us:
+    name_en: US Banks
+    name_ko: 미국 은행
+    proxy: "KBE:NYSE"
+    members: [JPM, BAC, WFC]
+  autos:
+    name_en: Autos
+    name_ko: 자동차
+    proxy: "CARZ:NASDAQ"
+    members: [TSLA, "005380:KRX"]
+  software:
+    name_en: Software
+    name_ko: 소프트웨어
+    proxy: "IGV:NASDAQ"
+    members: [MSFT, ADBE, CRM, ORCL]
+  big_tech:
+    name_en: Big Tech
+    name_ko: 빅테크
+    proxy: "QQQ:NASDAQ"
+    members: [AAPL, MSFT, GOOGL, AMZN, META, NVDA]
+  internet:
+    name_en: Internet
+    name_ko: 인터넷
+    proxy: "FDN:NYSE"
+    members: [GOOGL, AMZN, META, "035420:KRX"]
+  energy:
+    name_en: Energy
+    name_ko: 에너지
+    proxy: "XLE:NYSE"
+    members: [XOM, CVX]
+  financials:
+    name_en: Financials
+    name_ko: 금융
+    proxy: "XLF:NYSE"
+    members: [JPM, BAC, GS]
+  healthcare:
+    name_en: Healthcare
+    name_ko: 헬스케어
+    proxy: "XLV:NYSE"
+    members: [JNJ, PFE, UNH]
+  consumer:
+    name_en: Consumer
+    name_ko: 소비재
+    proxy: "XLY:NYSE"
+    members: [AMZN, TSLA, HD]

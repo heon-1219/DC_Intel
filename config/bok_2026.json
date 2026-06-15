@@ -1,0 +1,17 @@
+{
+  "event_type": "kr_bok_rate_decision",
+  "country": "KR",
+  "provider": "seed",
+  "time_estimated": true,
+  "_source": "bok.or.kr Monetary Policy Board base-rate decisions — dates exact; release time unpublished, ~10:00 KST estimate = 01:00:00Z (KST=UTC+9, no DST)",
+  "events": [
+    {"event_time": "2026-01-15T01:00:00Z", "provider_event_id": "bok-2026-01-15"},
+    {"event_time": "2026-02-26T01:00:00Z", "provider_event_id": "bok-2026-02-26"},
+    {"event_time": "2026-04-10T01:00:00Z", "provider_event_id": "bok-2026-04-10"},
+    {"event_time": "2026-05-28T01:00:00Z", "provider_event_id": "bok-2026-05-28"},
+    {"event_time": "2026-07-16T01:00:00Z", "provider_event_id": "bok-2026-07-16"},
+    {"event_time": "2026-08-27T01:00:00Z", "provider_event_id": "bok-2026-08-27"},
+    {"event_time": "2026-10-22T01:00:00Z", "provider_event_id": "bok-2026-10-22"},
+    {"event_time": "2026-11-26T01:00:00Z", "provider_event_id": "bok-2026-11-26"}
+  ]
+}
