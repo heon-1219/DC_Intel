@@ -32,5 +32,15 @@ def dedup(events: list[CanonEvent]) -> list[CanonEvent]:
             actual=pick("actual"),
             importance=winner.raw.importance if winner.raw.importance is not None
             else pick("importance"))
-        out.append(replace(winner, raw=merged_raw))
+        # keep the most-complete actual_vs_forecast across the group (actual > forecast > none)
+        best = max(grp, key=_avf_score)
+        out.append(replace(winner, raw=merged_raw, actual_vs_forecast=best.actual_vs_forecast))
     return out
+
+
+def _avf_score(e: CanonEvent) -> int:
+    a = e.actual_vs_forecast
+    if not a or not a.get("metrics"):
+        return -1
+    m = a["metrics"][0]
+    return (2 if m.get("actual") is not None else 0) + (1 if m.get("forecast") is not None else 0)

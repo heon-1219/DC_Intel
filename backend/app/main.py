@@ -18,7 +18,8 @@ from app.providers.finnhub_provider import FinnhubProvider
 from app.providers.pykrx_provider import PykrxProvider
 from app.providers.yfinance_bars import YFinanceBarProvider
 from app.providers.yfinance_provider import YFinanceProvider
-from app.routers import health, stocks
+from app.jobs.fetch_actual import backfill_actuals
+from app.routers import dashboard, health, stocks
 from app.scheduler import build_scheduler
 
 
@@ -60,6 +61,8 @@ async def lifespan(app: FastAPI):
     async def _cal():
         await sync_calendar(settings.sqlite_path, redis, breaker, providers=cal_providers,
                             registry_path=reg_path, sectors_path=sec_path)
+        await backfill_actuals(settings.sqlite_path, redis, breaker, providers=cal_providers,
+                               registry_path=reg_path, sectors_path=sec_path)
 
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
@@ -75,6 +78,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="DC Intel API", version="0.1.0", lifespan=lifespan)
     app.include_router(health.router)
     app.include_router(stocks.router)
+    app.include_router(dashboard.router)
     return app
 
 

@@ -12,8 +12,10 @@ _COLS = ("id, event_name, event_time, impact_level, affected_stocks_json, "
          "country, impact_source, status, created_at, updated_at")
 
 _INSERT_COLS = ["event_name", "event_time", "impact_level", "affected_stocks_json",
-                "provider", "provider_event_id", "event_type", "title_ko", "country",
-                "impact_source", "status", "updated_at"]
+                "actual_vs_forecast_json", "provider", "provider_event_id", "event_type",
+                "title_ko", "country", "impact_source", "status", "updated_at"]
+# event_time/status/actual_vs_forecast_json are NOT overwritten on conflict — a released
+# actual (set by fetch_actual) must survive later scheduled-only syncs (§11.3).
 _UPDATE_COLS = ["event_name", "impact_level", "affected_stocks_json", "event_type",
                 "title_ko", "country", "impact_source", "updated_at"]
 
@@ -23,8 +25,9 @@ def _now_iso() -> str:
 
 
 async def upsert_event(con, canon: CanonEvent) -> None:
+    avf = json.dumps(canon.actual_vs_forecast) if canon.actual_vs_forecast else None
     vals = [canon.event_name, canon.event_time, canon.impact_level,
-            json.dumps(canon.affected_json), canon.provider, canon.provider_event_id,
+            json.dumps(canon.affected_json), avf, canon.provider, canon.provider_event_id,
             canon.event_type, canon.title_ko, canon.country, canon.impact_source,
             "scheduled", _now_iso()]
     placeholders = ",".join("?" * len(_INSERT_COLS))
@@ -50,6 +53,28 @@ async def list_in_range(con, from_utc: str, to_utc: str, impact: list[str] | Non
         args += country
     q += " ORDER BY event_time ASC"
     cur = await con.execute(q, args)
+    return [dict(r) for r in await cur.fetchall()]
+
+
+async def set_actual(con, event_id: int, avf: dict, status: str = "released") -> None:
+    """Targeted update when an actual is fetched/revised (§11.3)."""
+    await con.execute(
+        "UPDATE economic_events SET actual_vs_forecast_json=?, status=?, updated_at=? WHERE id=?",
+        [json.dumps(avf), status, _now_iso(), event_id])
+    await con.commit()
+
+
+async def list_pending_actuals(con, before_utc: str) -> list[dict]:
+    """High/medium events past their time whose actual value is still null (for backfill,
+    §11.3). The stored JSON always carries the 'actual' key, so pending = json is NULL or
+    its actual is null (LIKE '%\"actual\": null%')."""
+    cur = await con.execute(
+        f"SELECT {_COLS} FROM economic_events WHERE status='scheduled' "
+        "AND impact_level IN ('high','medium') AND event_time <= ? "
+        "AND (actual_vs_forecast_json IS NULL "
+        "     OR actual_vs_forecast_json LIKE '%\"actual\": null%') "
+        "ORDER BY event_time DESC",
+        [before_utc])
     return [dict(r) for r in await cur.fetchall()]
 
 

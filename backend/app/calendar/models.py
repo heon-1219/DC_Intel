@@ -33,3 +33,4 @@ class CanonEvent:
     provider_event_id: str | None
     affected_json: dict
     raw: RawEvent
+    actual_vs_forecast: dict | None = None   # §7 payload (M3b); None when no numeric data

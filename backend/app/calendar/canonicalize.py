@@ -1,6 +1,7 @@
 """Canonicalize a RawEvent into a CanonEvent ready to upsert (economic-calendar.md §3-§6)."""
 from datetime import timezone
 
+from app.calendar.actuals import build_avf
 from app.calendar.affected import build_affected_json
 from app.calendar.impact import assign_impact
 from app.calendar.models import CanonEvent, RawEvent
@@ -25,7 +26,7 @@ def canonicalize(raw: RawEvent, registry: dict, sectors: dict,
             impact_level=impact, impact_source="override", provider=raw.provider,
             provider_event_id=raw.provider_event_id,
             affected_json=build_affected_json(None, sectors, earnings_stock=(sym, exch)),
-            raw=raw)
+            raw=raw, actual_vs_forecast=build_avf(raw, None, raw.provider))
 
     # Seeds carry their event_type directly; providers match by name.
     etype = raw.extra.get("event_type") or match_event_type(registry, raw.provider, raw.raw_name)
@@ -39,4 +40,5 @@ def canonicalize(raw: RawEvent, registry: dict, sectors: dict,
         event_type=etype, event_name=name, title_ko=name_ko, country=raw.country,
         event_time=_iso(raw.scheduled_utc), impact_level=impact, impact_source=impact_src,
         provider=raw.provider, provider_event_id=raw.provider_event_id,
-        affected_json=build_affected_json(entry, sectors), raw=raw)
+        affected_json=build_affected_json(entry, sectors), raw=raw,
+        actual_vs_forecast=build_avf(raw, entry, raw.provider))
