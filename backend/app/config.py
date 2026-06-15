@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     model_dir: str = "/data/models"
     twitter_enabled: bool = True
     finnhub_api_key: str = ""  # US fallback quote provider; chain degrades gracefully if unset
+    fred_api_key: str = ""  # free FRED key for calendar release dates; degrades gracefully if unset
 
     @field_validator("jwt_secret")
     @classmethod
