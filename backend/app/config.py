@@ -22,6 +22,15 @@ class Settings(BaseSettings):
     twitter_enabled: bool = True
     finnhub_api_key: str = ""  # US fallback quote provider; chain degrades gracefully if unset
     fred_api_key: str = ""  # free FRED key for calendar release dates; degrades gracefully if unset
+    # M4 social-intel + sentiment sources — each self-disables when its creds are unset
+    reddit_client_id: str = ""
+    reddit_client_secret: str = ""
+    reddit_user_agent: str = "web:dc-intel:v1.0 (by /u/dc_intel)"
+    stocktwits_access_token: str = ""
+    twitter_auth_token: str = ""
+    twitter_ct0: str = ""
+    twitter_cookies_file: str = ""
+    newsapi_api_key: str = ""
 
     @field_validator("jwt_secret")
     @classmethod

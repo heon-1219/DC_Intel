@@ -44,3 +44,18 @@ class FakeCalendarProvider:
         if self._error is not None:
             raise self._error
         return list(self._events)
+
+
+class FakeSourceFetcher:
+    def __init__(self, name: str, items=None, enabled: bool = True, error: Exception | None = None):
+        self.name = name
+        self._items = items or []
+        self.enabled = enabled
+        self._error = error
+        self.calls = 0
+
+    async def fetch(self, symbols):
+        self.calls += 1
+        if self._error is not None:
+            raise self._error
+        return list(self._items)
