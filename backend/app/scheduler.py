@@ -8,6 +8,7 @@ JOB_INTERVALS = {
     "poll_prices_krx": 1, "poll_prices_us": 1, "poll_indexes": 1,
     "heartbeat": 1, "recompute_indicators": 5,
     "intel_scrape": 10, "aggregate_sentiment": 10, "intel_anomaly_scan": 5,
+    "intel_confirmation_match": 10,
 }
 # job id -> daily cron (UTC). sync_calendar 21:30 UTC = 06:30 KST (§11.1);
 # econ_event_study 02:00 UTC after the sync (§11.4); intel author-stats/retention ~03:00/03:30 KST.

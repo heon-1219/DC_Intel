@@ -65,3 +65,11 @@ async def set_cluster_and_credibility(con, intel_id: int, cluster_id: str,
         "UPDATE market_intel SET cluster_id=?, credibility_score=? WHERE id=?",
         (cluster_id, credibility_score, intel_id))
     await con.commit()
+
+
+async def flip_confirmed_by_cluster(con, cluster_id: str) -> int:
+    """Mark every item in a cluster confirmed (the whole cluster flips, §8). Returns rowcount."""
+    cur = await con.execute(
+        "UPDATE market_intel SET confirmed=1 WHERE cluster_id=?", (cluster_id,))
+    await con.commit()
+    return cur.rowcount

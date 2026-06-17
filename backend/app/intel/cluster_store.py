@@ -24,6 +24,11 @@ async def get_active_clusters(redis, stock_id) -> list[dict]:
     return out
 
 
+async def get_centroid(redis, cluster_id: str) -> list[float] | None:
+    raw = await redis.get(f"intel:cluster:{cluster_id}")
+    return json.loads(raw)["centroid"] if raw else None
+
+
 async def _save(redis, cluster: dict, stock_id, ttl_h: int = INTEL_CLUSTER_TTL_H) -> None:
     cid = cluster["cluster_id"]
     idx = f"intel:clusters:{_bucket(stock_id)}"

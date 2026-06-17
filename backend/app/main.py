@@ -15,6 +15,7 @@ from app.intel.fetchers.reddit_fetcher import RedditFetcher
 from app.intel.fetchers.stocktwits_fetcher import StockTwitsFetcher
 from app.intel.fetchers.twitter_fetcher import TwitterFetcher
 from app.intel.anomaly import scan_anomalies
+from app.intel.confirm import match_confirmations
 from app.intel.embed import MiniLMEmbedder
 from app.intel.maintenance import purge_old_intel, recompute_author_stats
 from app.intel.scraper import ingest as intel_ingest
@@ -101,6 +102,9 @@ async def lifespan(app: FastAPI):
     async def _anomaly():
         await scan_anomalies(settings.sqlite_path, redis, bars)
 
+    async def _confirm():
+        await match_confirmations(settings.sqlite_path, redis)
+
     async def _author_stats():
         await recompute_author_stats(settings.sqlite_path, redis)
 
@@ -112,6 +116,7 @@ async def lifespan(app: FastAPI):
         "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal,
         "econ_event_study": _study, "intel_scrape": _intel_scrape,
         "aggregate_sentiment": _agg_sentiment, "intel_anomaly_scan": _anomaly,
+        "intel_confirmation_match": _confirm,
         "intel_author_stats": _author_stats, "intel_retention": _retention})
     try:
         yield
