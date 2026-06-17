@@ -25,6 +25,20 @@ async def insert_intel(con, *, source: str, author_handle: str, content_snippet:
     return cur.lastrowid
 
 
+async def list_recent(con, since_utc: str, *, stock_id: int | None = None,
+                      limit: int = 500) -> list[dict]:
+    """Recent rows for the feed. stock_id=None -> all (incl. market-wide); a value -> that stock."""
+    q = f"SELECT {_COLS} FROM market_intel WHERE created_at>=?"
+    args: list = [since_utc]
+    if stock_id is not None:
+        q += " AND stock_id=?"
+        args.append(stock_id)
+    q += " ORDER BY created_at DESC LIMIT ?"
+    args.append(limit)
+    cur = await con.execute(q, args)
+    return [dict(r) for r in await cur.fetchall()]
+
+
 async def list_recent_by_stock(con, stock_id: int, since_utc: str) -> list[dict]:
     cur = await con.execute(
         f"SELECT {_COLS} FROM market_intel WHERE stock_id=? AND created_at>=? "
