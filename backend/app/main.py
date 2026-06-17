@@ -10,11 +10,18 @@ from app.calendar.providers.fred_provider import FredProvider
 from app.calendar.providers.investing_provider import InvestingProvider
 from app.calendar.providers.seed_provider import SeedProvider
 from app.config import get_settings
+from app.intel.fetchers.kr_communities import DcInsideFetcher, NaverFetcher
+from app.intel.fetchers.reddit_fetcher import RedditFetcher
+from app.intel.fetchers.stocktwits_fetcher import StockTwitsFetcher
+from app.intel.fetchers.twitter_fetcher import TwitterFetcher
+from app.intel.scraper import ingest as intel_ingest
 from app.jobs.calendar_sync import sync_calendar
 from app.jobs.event_study import econ_event_study
 from app.jobs.indicator_calculator import recompute_indicators
 from app.jobs.price_poller import poll_indexes, poll_region
 from app.providers.breaker import CircuitBreaker
+from app.sentiment.classify import ZeroShotClassifier
+from app.sentiment.pipeline import aggregate_sentiment
 from app.providers.finnhub_provider import FinnhubProvider
 from app.providers.pykrx_provider import PykrxProvider
 from app.providers.yfinance_bars import YFinanceBarProvider
@@ -68,10 +75,27 @@ async def lifespan(app: FastAPI):
     async def _study():
         await econ_event_study(settings.sqlite_path, bars, registry_path=reg_path)
 
+    intel_fetchers = [
+        StockTwitsFetcher(settings.stocktwits_access_token),
+        RedditFetcher(settings.reddit_client_id, settings.reddit_client_secret,
+                      settings.reddit_user_agent),
+        TwitterFetcher(settings.twitter_auth_token, settings.twitter_ct0,
+                       settings.twitter_cookies_file, enabled_flag=settings.twitter_enabled),
+        DcInsideFetcher(), NaverFetcher(),
+    ]
+    classifier = ZeroShotClassifier()   # lazy: weights load on first classify
+
+    async def _intel_scrape():
+        await intel_ingest(settings.sqlite_path, redis, intel_fetchers)
+
+    async def _agg_sentiment():
+        await aggregate_sentiment(settings.sqlite_path, redis, classifier)
+
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
         "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal,
-        "econ_event_study": _study})
+        "econ_event_study": _study, "intel_scrape": _intel_scrape,
+        "aggregate_sentiment": _agg_sentiment})
     try:
         yield
     finally:

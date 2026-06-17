@@ -2,10 +2,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
-# job id -> interval in minutes. Prices/heartbeat every 1 min; indicators every 5 (§10.2).
+# job id -> interval in minutes. Prices/heartbeat every 1 min; indicators every 5 (§10.2);
+# intel scrape + sentiment aggregation every 10 (market-intel §14 / sentiment §10).
 JOB_INTERVALS = {
     "poll_prices_krx": 1, "poll_prices_us": 1, "poll_indexes": 1,
     "heartbeat": 1, "recompute_indicators": 5,
+    "intel_scrape": 10, "aggregate_sentiment": 10,
 }
 # job id -> daily cron (UTC). sync_calendar 21:30 UTC = 06:30 KST (§11.1);
 # econ_event_study 02:00 UTC after the sync (§11.4).
