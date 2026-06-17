@@ -7,13 +7,15 @@ from apscheduler.triggers.interval import IntervalTrigger
 JOB_INTERVALS = {
     "poll_prices_krx": 1, "poll_prices_us": 1, "poll_indexes": 1,
     "heartbeat": 1, "recompute_indicators": 5,
-    "intel_scrape": 10, "aggregate_sentiment": 10,
+    "intel_scrape": 10, "aggregate_sentiment": 10, "intel_anomaly_scan": 5,
 }
 # job id -> daily cron (UTC). sync_calendar 21:30 UTC = 06:30 KST (§11.1);
-# econ_event_study 02:00 UTC after the sync (§11.4).
+# econ_event_study 02:00 UTC after the sync (§11.4); intel author-stats/retention ~03:00/03:30 KST.
 JOB_CRONS = {
     "sync_calendar": {"hour": 21, "minute": 30},
     "econ_event_study": {"hour": 2, "minute": 0},
+    "intel_author_stats": {"hour": 18, "minute": 0},
+    "intel_retention": {"hour": 18, "minute": 30},
 }
 JOB_IDS = list(JOB_INTERVALS) + list(JOB_CRONS)
 

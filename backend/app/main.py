@@ -14,7 +14,11 @@ from app.intel.fetchers.kr_communities import DcInsideFetcher, NaverFetcher
 from app.intel.fetchers.reddit_fetcher import RedditFetcher
 from app.intel.fetchers.stocktwits_fetcher import StockTwitsFetcher
 from app.intel.fetchers.twitter_fetcher import TwitterFetcher
+from app.intel.anomaly import scan_anomalies
+from app.intel.maintenance import purge_old_intel, recompute_author_stats
 from app.intel.scraper import ingest as intel_ingest
+from app.sentiment.fetchers.finnhub_news import FinnhubNewsFetcher
+from app.sentiment.fetchers.newsapi import NewsApiFetcher
 from app.jobs.calendar_sync import sync_calendar
 from app.jobs.event_study import econ_event_study
 from app.jobs.indicator_calculator import recompute_indicators
@@ -82,6 +86,7 @@ async def lifespan(app: FastAPI):
         TwitterFetcher(settings.twitter_auth_token, settings.twitter_ct0,
                        settings.twitter_cookies_file, enabled_flag=settings.twitter_enabled),
         DcInsideFetcher(), NaverFetcher(),
+        FinnhubNewsFetcher(settings.finnhub_api_key), NewsApiFetcher(settings.newsapi_api_key),
     ]
     classifier = ZeroShotClassifier()   # lazy: weights load on first classify
 
@@ -91,11 +96,21 @@ async def lifespan(app: FastAPI):
     async def _agg_sentiment():
         await aggregate_sentiment(settings.sqlite_path, redis, classifier)
 
+    async def _anomaly():
+        await scan_anomalies(settings.sqlite_path, redis, bars)
+
+    async def _author_stats():
+        await recompute_author_stats(settings.sqlite_path, redis)
+
+    async def _retention():
+        await purge_old_intel(settings.sqlite_path)
+
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
         "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal,
         "econ_event_study": _study, "intel_scrape": _intel_scrape,
-        "aggregate_sentiment": _agg_sentiment})
+        "aggregate_sentiment": _agg_sentiment, "intel_anomaly_scan": _anomaly,
+        "intel_author_stats": _author_stats, "intel_retention": _retention})
     try:
         yield
     finally:
