@@ -15,6 +15,7 @@ from app.intel.fetchers.reddit_fetcher import RedditFetcher
 from app.intel.fetchers.stocktwits_fetcher import StockTwitsFetcher
 from app.intel.fetchers.twitter_fetcher import TwitterFetcher
 from app.intel.anomaly import scan_anomalies
+from app.intel.embed import MiniLMEmbedder
 from app.intel.maintenance import purge_old_intel, recompute_author_stats
 from app.intel.scraper import ingest as intel_ingest
 from app.sentiment.fetchers.finnhub_news import FinnhubNewsFetcher
@@ -89,9 +90,10 @@ async def lifespan(app: FastAPI):
         FinnhubNewsFetcher(settings.finnhub_api_key), NewsApiFetcher(settings.newsapi_api_key),
     ]
     classifier = ZeroShotClassifier()   # lazy: weights load on first classify
+    embedder = MiniLMEmbedder()         # lazy: MiniLM loads on first embed
 
     async def _intel_scrape():
-        await intel_ingest(settings.sqlite_path, redis, intel_fetchers)
+        await intel_ingest(settings.sqlite_path, redis, intel_fetchers, embedder=embedder)
 
     async def _agg_sentiment():
         await aggregate_sentiment(settings.sqlite_path, redis, classifier)

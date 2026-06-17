@@ -59,3 +59,13 @@ class FakeSourceFetcher:
         if self._error is not None:
             raise self._error
         return list(self._items)
+
+
+class FakeEmbedder:
+    """Deterministic offline embedder. `vec` (a fixed vector) is returned for every text, so all
+    items collapse into one cluster — handy for testing the cluster/credibility wiring."""
+    def __init__(self, vec=(1.0, 0.0, 0.0)):
+        self._vec = list(vec)
+
+    def embed(self, texts):
+        return [list(self._vec) for _ in texts]
