@@ -31,7 +31,8 @@ dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "fakeredis>=2.21", "anyio>=4.0", "
 # app/sentiment/classify.py, so the offline suite (which injects fakes) does NOT need these.
 # Install locally with: uv pip install -e "./backend[dev,ml]"  (Docker installs [ml] for the
 # real path). On Linux/Docker, use the CPU torch index to avoid the CUDA build.
-ml = ["torch>=2.2", "transformers>=4.40", "sentence-transformers>=2.7"]
+ml = ["torch>=2.2", "transformers>=4.40", "sentence-transformers>=2.7",
+      "scikit-learn>=1.4", "xgboost>=2.0", "shap>=0.45", "joblib>=1.3"]
 
 [tool.setuptools.packages.find]
 where = ["."]

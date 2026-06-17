@@ -1,0 +1,17 @@
+# M5 prediction-model tunables (prediction-model.md §10). Single source of defaults.
+# NOTE: dead_band_pct lives in app/tracking/labels.py (DEAD_BAND_PCT) — the grading contract —
+# and is mirrored here for reference only; the code imports it from labels.py to avoid drift.
+tau_dir: {"1h": 0.45, "5h": 0.45, "24h": 0.45, "2d": 0.45, "3d": 0.45, "5d": 0.45}
+staleness_confidence_cap: 65
+evidence_min_pct: 5
+econ_proximity_hours: 6
+econ_impact_weights: {high: 3, medium: 1, low: 0.25}
+xmkt_corr_window_days: 60
+ship_gate: {win_rate_pct: 52, coverage_pct: 30}
+promotion_margin_pp: 0.5
+# tf -> bar interval feeding that model (technical-indicators.md §3)
+bar_interval: {"1h": "5m", "5h": "15m", "24h": "1h", "2d": "1d", "3d": "1d", "5d": "1d"}
+# calendar-day history to backfill per tf (1h/5h limited by yfinance intraday window)
+history_days: {"1h": 60, "5h": 60, "24h": 365, "2d": 365, "3d": 365, "5d": 365}
+# staleness thresholds (seconds) for the data_staleness block (§4.5)
+staleness_sec: {prices: 600, technicals: 900, sentiment: 1800, intel: 1800, econ: 172800, xmkt: 129600}
