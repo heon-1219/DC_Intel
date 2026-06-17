@@ -5,7 +5,11 @@ WORKDIR /srv/backend
 # /srv/backend/app so the __file__-relative migrations/ and ../config paths resolve.
 COPY backend/ ./
 COPY config/ /srv/config/
-RUN pip install --no-cache-dir -e .
+# CPU-only torch FIRST from the PyTorch CPU index (the default Linux wheel pulls the multi-GB
+# CUDA build); then the editable install with the [ml] extra (torch already satisfied) for the
+# M4 sentiment/clustering models. Models themselves download from HuggingFace at first use.
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -e ".[ml]"
 
 ENV DATABASE_URL=sqlite+aiosqlite:////data/dcintel.db
 # Normalize line endings (Windows authoring) before making the entrypoint executable.
