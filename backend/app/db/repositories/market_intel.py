@@ -36,3 +36,18 @@ async def get_by_id(con, intel_id: int) -> dict | None:
     cur = await con.execute(f"SELECT {_COLS} FROM market_intel WHERE id=?", (intel_id,))
     row = await cur.fetchone()
     return dict(row) if row else None
+
+
+async def set_sentiment(con, intel_id: int, sentiment: str, confidence: float) -> None:
+    await con.execute(
+        "UPDATE market_intel SET sentiment=?, sentiment_confidence=? WHERE id=?",
+        (sentiment, round(confidence, 2), intel_id))
+    await con.commit()
+
+
+async def set_cluster_and_credibility(con, intel_id: int, cluster_id: str,
+                                      credibility_score: int) -> None:
+    await con.execute(
+        "UPDATE market_intel SET cluster_id=?, credibility_score=? WHERE id=?",
+        (cluster_id, credibility_score, intel_id))
+    await con.commit()
