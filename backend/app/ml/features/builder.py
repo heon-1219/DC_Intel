@@ -152,18 +152,20 @@ async def build_features(con, redis, stock_ref, timeframe: str, as_of: str):
         impact = ev["impact_level"]
         et = _parse(ev["event_time"])
         if as_of_dt <= et <= window_close:
-            prox = 1.0
+            prox, relation = 1.0, "inside_window"
         elif et < as_of_dt:
             prox = max(0.0, 1.0 - (as_of_dt - et).total_seconds() / 3600.0 / prox_h)
+            relation = "within_6h_before"
         else:
             prox = max(0.0, 1.0 - (et - window_close).total_seconds() / 3600.0 / prox_h)
+            relation = "within_6h_after"
         score += weights.get(impact, 0.0) * prox
         if impact == "high":
             high_in_window = 1
-            high_events.append({
+            high_events.append({   # reasoning_json §8.1 high_impact_events[] shape (relation = temporal)
                 "event_id": ev["id"], "title_en": ev["event_name"], "title_ko": ev.get("title_ko"),
                 "country": ev["country"], "impact": impact, "scheduled_at": ev["event_time"],
-                "relation": "listing" if ev["country"] == stock_ref.region else "global",
+                "relation": relation,
             })
     setf("econ_high_impact_6h", float(high_in_window), is_stale=econ_stale)
     setf("econ_impact_score", float(score), is_stale=econ_stale)

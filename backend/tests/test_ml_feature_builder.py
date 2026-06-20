@@ -188,7 +188,9 @@ async def test_econ_high_impact_and_score_inside_window(tmp_path):
     assert vec["econ_high_impact_6h"] == pytest.approx(1.0)
     assert vec["econ_impact_score"] == pytest.approx(3.0)        # weight high=3 * proximity 1
     assert meta["missing"]["econ_high_impact_6h"] is False
-    assert any(e["impact"] == "high" for e in meta["high_impact_events"])
+    ev = meta["high_impact_events"][0]
+    assert ev["impact"] == "high" and ev["relation"] == "inside_window"   # §8.1 temporal relation
+    assert ev["title_en"] == "US CPI" and ev["country"] == "US"
 
 
 @pytest.mark.asyncio
