@@ -5,13 +5,16 @@ from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from app.auth.deps import get_current_user_optional
 from app.cache import redis as cache_redis
-from app.calendar.registry import load_registry
+from app.calendar.affects import compute_event_affects
+from app.calendar.registry import load_registry, load_sectors
 from app.config import get_settings
 from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
 from app.db.repositories import economic_events as repo
 from app.db.repositories import market_intel as mi_repo
+from app.db.repositories import predictions as pred_repo
 from app.db.repositories import stocks as srepo
 from app.intel.config import INTEL_MIN_CREDIBILITY_DEFAULT
 from app.intel.feed import build_clusters
@@ -19,9 +22,11 @@ from app.intel.feed import build_clusters
 router = APIRouter()
 
 _INTEL_LOOKBACK_H = 72
+_HOLDINGS_LOOKBACK_D = 14
 
 _CONFIG = Path(__file__).resolve().parents[3] / "config"
 _REG_PATH = str(_CONFIG / "economic_events.yaml")
+_SEC_PATH = str(_CONFIG / "sectors.yaml")
 _VALID_IMPACT = {"high", "medium", "low"}
 _STALE_AFTER_H = 48
 
@@ -53,9 +58,21 @@ def _event_base(row: dict, registry: dict) -> dict:
     }
 
 
+async def _holdings_instruments(con, user_id: int, now: datetime) -> list[tuple[str, str]]:
+    """The (symbol, exchange) of stocks the user has predicted on in the last 14 days."""
+    since = _iso(now - timedelta(days=_HOLDINGS_LOOKBACK_D))
+    ids = await pred_repo.distinct_recent_stock_ids(con, user_id, since)
+    if not ids:
+        return []
+    qs = ",".join("?" * len(ids))
+    cur = await con.execute(f"SELECT symbol, exchange FROM stocks WHERE id IN ({qs})", ids)
+    return [(r["symbol"], r["exchange"]) for r in await cur.fetchall()]
+
+
 @router.get("/dashboard/economic-calendar")
 async def economic_calendar(request: Request):
     rid = request.headers.get("x-request-id", "req_local")
+    user = await get_current_user_optional(request)   # anon -> None; present-but-invalid -> 401
     qp = request.query_params
     try:
         days = int(qp.get("days", 7))
@@ -87,14 +104,20 @@ async def economic_calendar(request: Request):
         events_base = [_event_base(r, registry) for r in rows]
         await redis.set(cache_key, json.dumps(events_base), ex=600)
 
+    holdings, sectors = [], {}
+    if user:
+        async with connect(get_settings().sqlite_path) as con:
+            holdings = await _holdings_instruments(con, user["id"], now)
+        sectors = load_sectors(_SEC_PATH)
+
     events = []
     for e in events_base:
         sched = datetime.fromisoformat(e["scheduled_at_utc"].replace("Z", "+00:00"))
         countdown = (int((sched - now).total_seconds())
                      if e["status"] not in ("released", "cancelled") else None)
-        events.append({**e, "countdown_seconds": countdown,
-                       "affects_your_stocks": None, "match_level": None,
-                       "matched_symbols": []})   # auth overlay lands in M6
+        overlay = (compute_event_affects(holdings, e["affected"], sectors) if user else
+                   {"affects_your_stocks": None, "match_level": None, "matched_symbols": []})
+        events.append({**e, "countdown_seconds": countdown, **overlay})
 
     last_synced = await redis.get("cal:last_synced_at")
     data_stale = True
