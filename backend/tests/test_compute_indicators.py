@@ -32,6 +32,14 @@ def test_payload_has_full_contract_keys():
         assert key in payload, f"missing {key}"
 
 
+def test_payload_includes_raw_close():
+    # M5: the feature builder needs the raw last close (macd_hist_norm = macd_histogram / close);
+    # the §10.1 payload must carry it so it lands in technical_snapshots.indicators_json.
+    frame = _frame()
+    payload = ind.compute_indicators(frame, bar_interval="1d")
+    assert payload["close"] == pytest.approx(float(frame["close"].iloc[-1]))
+
+
 def test_payload_rising_series_is_bullish():
     payload = ind.compute_indicators(_frame(), bar_interval="1d")
     assert payload["rsi_14"] == pytest.approx(100.0, abs=1e-6)   # strictly rising

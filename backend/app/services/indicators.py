@@ -302,6 +302,7 @@ def compute_indicators(bars: pd.DataFrame, *, bar_interval: str,
 
     # Stored at full float precision per §2; display rounding is the UI/copy layer's job.
     return {
+        "close": c_t,   # raw last close — M5 feature builder needs it (macd_hist_norm = macd_histogram/close)
         "rsi_14": rsi_val,
         "rsi_state": rsi_state(rsi_val) if rsi_val is not None else None,
         "ema_5": ema5_v, "ema_20": ema20_v,

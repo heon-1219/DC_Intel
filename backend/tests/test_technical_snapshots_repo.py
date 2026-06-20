@@ -69,6 +69,66 @@ async def test_get_latest_returns_none_when_empty(tmp_path):
         assert await trepo.get_latest_snapshot(con, ref.id, "5m") is None
 
 
+async def _seed_series(con, ref):
+    """Three daily snapshots on consecutive days, ascending rsi, for as-of tests."""
+    for ts, rsi in [("2026-06-10T06:30:00Z", 40.0),
+                    ("2026-06-11T06:30:00Z", 50.0),
+                    ("2026-06-12T06:30:00Z", 60.0)]:
+        p = _payload(); p["rsi_14"] = rsi
+        await trepo.upsert_snapshot(con, ref.id, "1d", ts, p)
+
+
+@pytest.mark.asyncio
+async def test_get_latest_at_excludes_future(tmp_path):
+    db = await _seed_db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        await _seed_series(con, ref)
+        snap = await trepo.get_latest_at(con, ref.id, "1d", "2026-06-11T12:00:00Z")
+    assert snap["timestamp"] == "2026-06-11T06:30:00Z"   # latest <= as_of, NOT the 06-12 future bar
+    assert snap["rsi"] == 50.0
+
+
+@pytest.mark.asyncio
+async def test_get_latest_at_inclusive_of_exact_as_of(tmp_path):
+    db = await _seed_db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        await _seed_series(con, ref)
+        snap = await trepo.get_latest_at(con, ref.id, "1d", "2026-06-11T06:30:00Z")
+    assert snap["timestamp"] == "2026-06-11T06:30:00Z"   # <= is inclusive
+
+
+@pytest.mark.asyncio
+async def test_get_latest_at_none_when_all_future(tmp_path):
+    db = await _seed_db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        await _seed_series(con, ref)
+        assert await trepo.get_latest_at(con, ref.id, "1d", "2026-06-09T00:00:00Z") is None
+
+
+@pytest.mark.asyncio
+async def test_get_recent_at_returns_n_newest_first(tmp_path):
+    db = await _seed_db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        await _seed_series(con, ref)
+        rows = await trepo.get_recent_at(con, ref.id, "1d", "2026-06-12T23:00:00Z", limit=2)
+    assert [r["timestamp"] for r in rows] == ["2026-06-12T06:30:00Z", "2026-06-11T06:30:00Z"]
+    assert rows[0]["indicators"]["rsi_14"] == 60.0   # parsed payload, newest first
+
+
+@pytest.mark.asyncio
+async def test_get_recent_at_bounded_by_as_of(tmp_path):
+    db = await _seed_db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        await _seed_series(con, ref)
+        rows = await trepo.get_recent_at(con, ref.id, "1d", "2026-06-11T12:00:00Z", limit=10)
+    assert [r["timestamp"] for r in rows] == ["2026-06-11T06:30:00Z", "2026-06-10T06:30:00Z"]
+
+
 @pytest.mark.asyncio
 async def test_list_active_all_includes_indexes(tmp_path):
     db = await _seed_db(tmp_path)

@@ -28,6 +28,12 @@ async def upsert_snapshot(con, stock_id: int, bar_interval: str, timestamp: str,
     await con.commit()
 
 
+def _row_to_dict(row) -> dict:
+    d = dict(row)
+    d["indicators"] = json.loads(d.pop("indicators_json"))
+    return d
+
+
 async def get_latest_snapshot(con, stock_id: int, bar_interval: str) -> dict | None:
     cur = await con.execute(
         "SELECT * FROM technical_snapshots WHERE stock_id=? AND bar_interval=? "
@@ -35,8 +41,25 @@ async def get_latest_snapshot(con, stock_id: int, bar_interval: str) -> dict | N
         (stock_id, bar_interval),
     )
     row = await cur.fetchone()
-    if row is None:
-        return None
-    d = dict(row)
-    d["indicators"] = json.loads(d.pop("indicators_json"))
-    return d
+    return _row_to_dict(row) if row is not None else None
+
+
+async def get_recent_at(con, stock_id: int, bar_interval: str, as_of: str,
+                        limit: int = 1) -> list[dict]:
+    """The `limit` most recent snapshots with timestamp <= as_of, NEWEST FIRST.
+    The #1 anti-leakage guard for M5/M6/M7: nothing after `as_of` is returned. Because the
+    backfill/recompute jobs write one snapshot per bar, index 0 is bar t, index 1 is t-1,
+    index 3 is t-3 — exact across session/weekend gaps (no timestamp arithmetic)."""
+    cur = await con.execute(
+        "SELECT * FROM technical_snapshots WHERE stock_id=? AND bar_interval=? AND timestamp<=? "
+        "ORDER BY timestamp DESC LIMIT ?",
+        (stock_id, bar_interval, as_of, limit),
+    )
+    return [_row_to_dict(r) for r in await cur.fetchall()]
+
+
+async def get_latest_at(con, stock_id: int, bar_interval: str, as_of: str) -> dict | None:
+    """The single most recent snapshot with timestamp <= as_of (as-of-bounded twin of
+    get_latest_snapshot). Used by the feature builder (bar t) + M6 serving + M7 grading."""
+    rows = await get_recent_at(con, stock_id, bar_interval, as_of, limit=1)
+    return rows[0] if rows else None

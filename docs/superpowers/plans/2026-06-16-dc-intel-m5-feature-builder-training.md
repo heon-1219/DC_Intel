@@ -63,7 +63,13 @@ Bar interval per tf: 1h→5m, 5h→15m, 24h→60m, 2d/3d/5d→1d. Cross-mkt ref 
 ---
 ## Slice breakdown
 
-### M5a — feature builder + label + config + deps
+### M5a — feature builder + label + config + deps  ✅ COMPLETE (298 tests)
+> Built: labels.py, ml.yaml + ml/config.py, [ml] deps, AND `app/ml/features/builder.py`. Wrinkles
+> resolved: `close` added to `compute_indicators`; `technical_snapshots.get_latest_at`/`get_recent_at`
+> + `sentiment_logs.get_latest_at` (as-of-bounded). Decisions: bar-interval-aware technicals
+> staleness (daily-bar timestamps are bar dates); econ window uses nominal horizon hours; cross-market
+> deferred → always None+missing (§4.4 imputes). 16 builder tests assert exact values + missing/stale
+> + as-of bounding on a real temp SQLite DB.
 - `app/tracking/labels.py` (`derive_direction`, `DEAD_BAND_PCT`) + test (oracle: bands).
 - `config/ml.yaml` + `app/ml/config.py` loader (tunables above).
 - deps: scikit-learn, xgboost, shap, joblib → [ml]; install on py3.11 venv.

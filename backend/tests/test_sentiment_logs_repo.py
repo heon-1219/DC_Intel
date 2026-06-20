@@ -32,6 +32,29 @@ async def test_insert_and_get_latest(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_get_latest_at_excludes_future(tmp_path):
+    db = await _db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        for ts, sc in [("2026-06-16T03:00:00Z", 10.0),
+                       ("2026-06-16T05:00:00Z", 20.0),
+                       ("2026-06-16T07:00:00Z", 30.0)]:
+            await repo.insert_log(con, ref.id, ts, sc, {"timeframe_scores": {"24h": {"score": sc}}})
+        snap = await repo.get_latest_at(con, ref.id, "2026-06-16T06:00:00Z")
+    assert snap["timestamp"] == "2026-06-16T05:00:00Z"   # latest <= as_of, not the 07:00 future row
+    assert snap["source_breakdown"]["timeframe_scores"]["24h"]["score"] == 20.0
+
+
+@pytest.mark.asyncio
+async def test_get_latest_at_none_before_any(tmp_path):
+    db = await _db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        await repo.insert_log(con, ref.id, "2026-06-16T05:00:00Z", 20.0, {"v": 1})
+        assert await repo.get_latest_at(con, ref.id, "2026-06-16T04:00:00Z") is None
+
+
+@pytest.mark.asyncio
 async def test_upsert_same_timestamp_and_null_score(tmp_path):
     db = await _db(tmp_path)
     async with connect(db) as con:
