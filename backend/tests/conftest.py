@@ -1,7 +1,13 @@
+import os
 from pathlib import Path
 
 import fakeredis.aioredis
 import pytest
+
+# Default env so get_settings() validates in plain unit tests (auth/security etc.). Set BEFORE any
+# app import / first get_settings() call. The app_client fixture overrides these per-test + cache_clears.
+os.environ.setdefault("JWT_SECRET", "x" * 32)
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test_unit.db")
 
 MIG_DIR = str(Path(__file__).resolve().parents[1] / "migrations")
 SEED_CSV = str(Path(__file__).resolve().parents[2] / "config" / "seed_stocks.csv")
