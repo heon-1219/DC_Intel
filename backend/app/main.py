@@ -34,7 +34,7 @@ from app.providers.yfinance_bars import YFinanceBarProvider
 from app.providers.yfinance_provider import YFinanceProvider
 from app.jobs.fetch_actual import backfill_actuals
 from app.auth.deps import AuthError, auth_error_handler
-from app.routers import dashboard, health, stocks
+from app.routers import auth, dashboard, health, stocks
 from app.scheduler import build_scheduler
 
 
@@ -132,6 +132,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(stocks.router)
     app.include_router(dashboard.router)
+    app.include_router(auth.router)
     return app
 
 
