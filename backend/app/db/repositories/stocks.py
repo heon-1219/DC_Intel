@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from app.providers.base import StockRef
 
 _COLS = ("id, symbol, exchange, region, currency, yfinance_ticker, finnhub_ticker, "
-         "company_name, company_name_ko")
+         "company_name, company_name_ko, xmkt_reference")
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ def _row_to_ref(row) -> StockRef:
         id=row["id"], symbol=row["symbol"], exchange=row["exchange"], region=row["region"],
         currency=row["currency"], yfinance_ticker=row["yfinance_ticker"],
         finnhub_ticker=row["finnhub_ticker"], company_name=row["company_name"],
-        company_name_ko=row["company_name_ko"],
+        company_name_ko=row["company_name_ko"], xmkt_reference=row["xmkt_reference"],
     )
 
 

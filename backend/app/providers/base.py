@@ -14,6 +14,7 @@ class StockRef:
     finnhub_ticker: str | None
     company_name: str | None = None       # trailing/defaulted: positional construction unaffected
     company_name_ko: str | None = None
+    xmkt_reference: str | None = None      # cross-market reference (e.g. 'SOXX', '^N225', '005490:KRX')
 
 
 @dataclass(frozen=True)

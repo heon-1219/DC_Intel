@@ -63,6 +63,17 @@ async def test_backfill_timestamp_matches_live_format(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_distinct_references_resolved_from_seed(tmp_path):
+    from app.db.repositories import stocks as srepo
+    from app.ml.backfill import distinct_references
+    db = await _db(tmp_path)
+    async with connect(db) as con:
+        refs = distinct_references(await srepo.list_active_all(con))
+    # Samsung/Hynix/NVDA -> SOXX; AAPL -> ^N225; Hyundai/NAVER (empty) -> SPY; PKX -> 005490.KS
+    assert set(refs) == {"SOXX", "^N225", "SPY", "005490.KS"}
+
+
+@pytest.mark.asyncio
 async def test_backfill_idempotent(tmp_path):
     db = await _db(tmp_path)
     bars = _bars(40)

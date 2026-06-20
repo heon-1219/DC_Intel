@@ -1,6 +1,7 @@
 """M5 feature builder tests (prediction-model.md §4.2). Seeds a real temp SQLite DB + fakeredis
 and asserts the exact 15-feature vector, missing/stale flags, and — critically — as-of bounding
 (no record after as_of may influence the vector; the #1 anti-leakage guard)."""
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import fakeredis.aioredis
@@ -8,6 +9,7 @@ import pytest
 
 from app.db.connection import connect
 from app.db.migrate import migrate
+from app.db.repositories import cross_market_bars as cmrepo
 from app.db.repositories import sentiment_logs as slrepo
 from app.db.repositories import stocks as srepo
 from app.db.repositories import technical_snapshots as trepo
@@ -234,13 +236,43 @@ async def test_market_is_krx_flag(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_cross_market_deferred_missing_v1(tmp_path):
+async def test_cross_market_missing_when_no_ref_bars(tmp_path):
     db = await _db(tmp_path)
     async with connect(db) as con:
-        ref = await srepo.get_stock(con, "005930", "KRX")
+        ref = await srepo.get_stock(con, "005930", "KRX")   # ref SOXX, but no bars stored
         vec, meta = await build_features(con, _redis(), ref, "2d", "2026-06-12T00:00:00Z")
     for k in ("xmkt_ref_return", "xmkt_corr_60d"):
         assert vec[k] is None and meta["missing"][k] is True
+
+
+@pytest.mark.asyncio
+async def test_xmkt_ref_return_computed_and_leak_safe(tmp_path):
+    db = await _db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")   # -> SOXX (US, closes 20:00Z)
+        await cmrepo.upsert_bars(con, "SOXX", [
+            ("2026-06-10", 225.0), ("2026-06-11", 223.0),
+            ("2026-06-12", 999.0)])   # 06-12 US session NOT closed by a KRX-morning t0 -> must be ignored
+        vec, meta = await build_features(con, _redis(), ref, "2d", "2026-06-12T00:30:00Z")
+    assert vec["xmkt_ref_return"] == pytest.approx((223.0 - 225.0) / 225.0 * 100)  # 06-11 vs 06-10
+    assert meta["missing"]["xmkt_ref_return"] is False
+
+
+@pytest.mark.asyncio
+async def test_xmkt_corr_computed_with_enough_history(tmp_path):
+    db = await _db(tmp_path)
+    dates = [(datetime(2026, 4, 1, tzinfo=timezone.utc) + timedelta(days=i)).date().isoformat()
+             for i in range(40)]
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        # stock daily closes (1d snapshots) + SOXX bars on the same dates, co-moving -> corr defined
+        await cmrepo.upsert_bars(con, "SOXX", [(d, 200.0 + 2 * i) for i, d in enumerate(dates)])
+        for i, d in enumerate(dates):
+            await trepo.upsert_snapshot(con, ref.id, "1d", d + "T06:30:00Z",
+                                        _payload(rsi_14=50.0, close=100.0 + i))
+        vec, meta = await build_features(con, _redis(), ref, "2d", "2026-05-25T00:30:00Z")
+    assert vec["xmkt_corr_60d"] is not None and -1.0 <= vec["xmkt_corr_60d"] <= 1.0
+    assert meta["missing"]["xmkt_corr_60d"] is False
 
 
 @pytest.mark.asyncio

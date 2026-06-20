@@ -12,7 +12,9 @@ historical samples (the §4.4 path handles it). Run: python -m app.ml.backfill [
 import argparse
 import asyncio
 
+from app.db.repositories import cross_market_bars as cmrepo
 from app.db.repositories import technical_snapshots as trepo
+from app.ml.xmkt import resolve_reference
 from app.providers.yfinance_bars import YFinanceBarProvider
 from app.services.indicator_pipeline import _is_first_bar_of_session, _iso
 from app.services.indicators import compute_indicators
@@ -72,18 +74,59 @@ async def _backfill_with_retry(con, ref, interval, *, attempts: int, base_delay:
     return 0
 
 
-async def _run(db: str, intervals, *, delay_sec: float = 2.0, attempts: int = 4):
+def distinct_references(stock_refs) -> list[str]:
+    """The set of yfinance reference tickers to backfill, resolved from stocks.xmkt_reference
+    (non-index stocks only). Pure + deterministic (sorted)."""
+    return sorted({resolve_reference(s.xmkt_reference) for s in stock_refs if s.exchange != "INDEX"})
+
+
+async def backfill_reference(con, ref_ticker: str, *, days: int = 1100) -> int:
+    """Fetch a reference's real daily history from yfinance and store closes in cross_market_bars."""
+    bars = await _fetch_history(ref_ticker, "1d", days)
+    if bars is None or len(bars) == 0:
+        return 0
+    rows = [(idx.date().isoformat(), float(c))
+            for idx, c in zip(bars.index, bars["close"]) if c == c]  # drop NaN closes
+    await cmrepo.upsert_bars(con, ref_ticker, rows)
+    return len(rows)
+
+
+async def _backfill_references(con, *, delay_sec: float, attempts: int):
+    from app.db.repositories import stocks as srepo
+    refs = distinct_references(await srepo.list_active_all(con))
+    for ref in refs:
+        last = None
+        for attempt in range(attempts):
+            try:
+                n = await backfill_reference(con, ref)
+                if n > 0:
+                    print(f"[ref] {ref}: {n} daily bars")
+                    break
+                last = "0 bars"
+            except Exception as e:  # noqa: BLE001
+                last = f"{type(e).__name__}: {e}"
+            if attempt < attempts - 1:
+                await asyncio.sleep(delay_sec * (attempt + 1))
+        else:
+            print(f"[ref] {ref}: gave up - {last}")
+        await asyncio.sleep(delay_sec)
+
+
+async def _run(db: str, intervals, *, delay_sec: float = 2.0, attempts: int = 4,
+               refs_only: bool = False):
     from app.db.connection import connect
     from app.db.repositories import stocks as srepo
     async with connect(db) as con:
-        refs = [r for r in await srepo.list_active_all(con) if r.exchange != "INDEX"]
-        for ref in refs:
-            for interval in intervals:
-                w = await _backfill_with_retry(con, ref, interval, attempts=attempts,
-                                               base_delay=delay_sec)
-                if w:
-                    print(f"{ref.symbol}:{ref.exchange} {interval}: {w} snapshots")
-                await asyncio.sleep(delay_sec)   # courtesy throttle between requests
+        if not refs_only:
+            refs = [r for r in await srepo.list_active_all(con) if r.exchange != "INDEX"]
+            for ref in refs:
+                for interval in intervals:
+                    w = await _backfill_with_retry(con, ref, interval, attempts=attempts,
+                                                   base_delay=delay_sec)
+                    if w:
+                        print(f"{ref.symbol}:{ref.exchange} {interval}: {w} snapshots")
+                    await asyncio.sleep(delay_sec)   # courtesy throttle between requests
+        await _backfill_references(con, delay_sec=delay_sec, attempts=attempts)
 
 
 def main(argv=None):
@@ -91,8 +134,10 @@ def main(argv=None):
     p.add_argument("--db", default="dcintel.db")
     p.add_argument("--intervals", default=",".join(INTERVALS),
                    help="comma-separated subset of 5m,15m,1h,1d")
+    p.add_argument("--refs-only", action="store_true",
+                   help="skip per-stock snapshots; only backfill cross-market reference daily bars")
     a = p.parse_args(argv)
-    asyncio.run(_run(a.db, tuple(a.intervals.split(","))))
+    asyncio.run(_run(a.db, tuple(a.intervals.split(",")), refs_only=a.refs_only))
 
 
 if __name__ == "__main__":
