@@ -1,0 +1,137 @@
+{
+  "model_version": "3d-lr-20260620.1",
+  "timeframe": "3d",
+  "algorithm": "logistic",
+  "created_at": "2026-06-20T17:52:58.627529Z",
+  "git_commit": "6d802d9",
+  "n_samples": 1432,
+  "train_window": {
+    "from": "2023-07-13T15:00:00Z",
+    "to": "2026-06-12T04:00:00Z"
+  },
+  "split": {
+    "train": 1002,
+    "val": 215,
+    "test": 215
+  },
+  "neutral_band_pct": 0.6,
+  "tau_dir": 0.45,
+  "staleness_confidence_cap": 65,
+  "calibration_method": "platt",
+  "ece": 0.0365358872747063,
+  "gate": {
+    "win_rate": 0.49767441860465117,
+    "coverage": 1.0,
+    "passed": false,
+    "thresholds": {
+      "win_rate_pct": 52,
+      "coverage_pct": 30
+    }
+  },
+  "candidates": {
+    "logistic": 0.49767441860465117,
+    "xgboost": 0.49767441860465117
+  },
+  "walk_forward": [
+    {
+      "fold": 0,
+      "win_rate": 0.3333333333333333
+    },
+    {
+      "fold": 1,
+      "win_rate": 0.6875
+    },
+    {
+      "fold": 2,
+      "win_rate": 0.25
+    },
+    {
+      "fold": 3,
+      "win_rate": 1.0
+    }
+  ],
+  "min_fold_win_rate": 0.25,
+  "fold_warn": true,
+  "lib_versions": {
+    "sklearn": "1.9.0",
+    "xgboost": "3.2.0",
+    "numpy": "2.4.6"
+  },
+  "features": [
+    {
+      "name": "rsi_14",
+      "mean": 52.48198398685172,
+      "std": 11.955827180753312
+    },
+    {
+      "name": "rsi_slope_3",
+      "mean": -0.01981123836356074,
+      "std": 7.933668144693748
+    },
+    {
+      "name": "ema_cross_state",
+      "mean": 0.09780439121756487,
+      "std": 0.9841129067511587
+    },
+    {
+      "name": "ema_bars_since_cross",
+      "mean": 1.7125748502994012,
+      "std": 12.59634414365197
+    },
+    {
+      "name": "macd_hist_norm",
+      "mean": 0.00010041240631167196,
+      "std": 0.007578500477660525
+    },
+    {
+      "name": "macd_hist_delta",
+      "mean": -2.228059038079699e-07,
+      "std": 0.0020027198695169767
+    },
+    {
+      "name": "bb_position",
+      "mean": 0.5484583346376238,
+      "std": 0.32942620024273706
+    },
+    {
+      "name": "vol_z20",
+      "mean": -0.006455895027484228,
+      "std": 1.0906089281431977
+    },
+    {
+      "name": "sent_agg",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "sent_delta_2h",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "econ_high_impact_6h",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "econ_impact_score",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "xmkt_ref_return",
+      "mean": 0.13356654046619676,
+      "std": 2.0479751368459014
+    },
+    {
+      "name": "xmkt_corr_60d",
+      "mean": 0.39300489496950275,
+      "std": 0.23005023350398995
+    },
+    {
+      "name": "market_is_krx",
+      "mean": 0.6606786427145709,
+      "std": 0.4734790109132687
+    }
+  ]
+}

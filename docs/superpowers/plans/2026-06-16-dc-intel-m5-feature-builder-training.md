@@ -94,7 +94,15 @@ Bar interval per tf: 1h→5m, 5h→15m, 24h→60m, 2d/3d/5d→1d. Cross-mkt ref 
 - `app/ml/train.py`: CLI `python -m app.ml.train --timeframe <tf> --as-of <date>` → resample→split→LR+XGB grids→calibrate→folds→gate→pick winner→write artifact+manifest+feature_importance. Lazy ML imports.
 - Tests: split boundaries/no-overlap; calibration sums to 1; gate math (52/30, neutral=loss); explain largest-remainder + drop<5%; train smoke on a tiny in-memory dataset (asserts artifact+manifest written, deterministic).
 
-### M5c — backfill real seed history + train the 6 models
+### M5c — backfill real seed history + train the 6 models  ✅ COMPLETE
+> Backfilled REAL yfinance daily/intraday history (4-5 seeds; KRX intraday partially Yahoo-rate-limited
+> -> retry/throttle added). Added cross-market (M5d, owner Option B): migration 002 cross_market_bars,
+> ml/xmkt.py, xmkt_reference on StockRef, builder computes xmkt_ref_return/xmkt_corr_60d, backfill
+> --refs-only (SOXX/^N225/SPY/005490.KS, ~730-754 daily bars each). Trained all 6 on real data.
+> **HONEST gate results:** 5d PASS 52.7% (cov 1.0, ECE 0.023, n=860) but fold_warn (walk-forward
+> [0.36,0.67,0,1.0] = fragile); 2d 51.1% / 24h 50.2% / 3d 49.8% / 1h 34.7% / 5h 25.0% FAIL ->
+> disabled-with-note. xmkt_corr_60d = #1 feature importance in 5d (Option B paid off). Train uses
+> _NullRedis (offline batch). 375 tests. **M5 COMPLETE -> M6 next.**
 - `app/ml/backfill.py`: for each seed stock × needed bar interval, fetch yfinance history (YFinanceBarProvider with extended windows), compute historical technical_snapshots at each bar (reuse `compute_indicators`), persist. (Sentiment/calendar absent historically → missing.)
 - Run `train.py` for all 6 timeframes on the backfilled seed history; capture real win rates/coverage; write artifacts; gate-fail tfs flagged disabled.
 - Report per-tf gate results honestly. Docker/live not required; this is a CLI/compute step. Commit artifacts? (manifests yes; .pkl maybe gitignored — decide: gitignore models/*.pkl, keep manifests.)

@@ -255,14 +255,20 @@ async def persist_feature_importance(con, art: dict) -> None:
 
 # --- CLI (used by M5c on real backfilled history) -------------------------
 
+class _NullRedis:
+    """Training is an offline batch with no Redis. get() returns None instantly so build_features
+    never blocks on a connection (econ staleness is a serve-time concern, irrelevant to training)."""
+    async def get(self, *_a, **_k):
+        return None
+
+
 async def _run(timeframe, db, models_root, now_iso, git_commit):
     from app.db.connection import connect
     from app.db.repositories import stocks as srepo
     cfg = load_ml_config()
     async with connect(db) as con:
         refs = [r for r in await srepo.list_active_all(con) if r.exchange != "INDEX"]
-        from app.cache import redis as cache_redis
-        samples = await build_dataset(con, cache_redis.get_client(), refs, timeframe)
+        samples = await build_dataset(con, _NullRedis(), refs, timeframe)
         if len(samples) < MIN_SAMPLES:
             print(f"{timeframe}: only {len(samples)} samples (< {MIN_SAMPLES}) -> DISABLED (gate skipped)")
             return

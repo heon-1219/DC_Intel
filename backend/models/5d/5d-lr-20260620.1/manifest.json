@@ -1,0 +1,137 @@
+{
+  "model_version": "5d-lr-20260620.1",
+  "timeframe": "5d",
+  "algorithm": "logistic",
+  "created_at": "2026-06-20T17:53:28.352980Z",
+  "git_commit": "6d802d9",
+  "n_samples": 860,
+  "train_window": {
+    "from": "2023-07-13T15:00:00Z",
+    "to": "2026-06-11T15:00:00Z"
+  },
+  "split": {
+    "train": 602,
+    "val": 129,
+    "test": 129
+  },
+  "neutral_band_pct": 0.75,
+  "tau_dir": 0.45,
+  "staleness_confidence_cap": 65,
+  "calibration_method": "platt",
+  "ece": 0.023432481857245446,
+  "gate": {
+    "win_rate": 0.5271317829457365,
+    "coverage": 1.0,
+    "passed": true,
+    "thresholds": {
+      "win_rate_pct": 52,
+      "coverage_pct": 30
+    }
+  },
+  "candidates": {
+    "logistic": 0.5271317829457365,
+    "xgboost": 0.5271317829457365
+  },
+  "walk_forward": [
+    {
+      "fold": 0,
+      "win_rate": 0.36363636363636365
+    },
+    {
+      "fold": 1,
+      "win_rate": 0.6666666666666666
+    },
+    {
+      "fold": 2,
+      "win_rate": 0.0
+    },
+    {
+      "fold": 3,
+      "win_rate": 1.0
+    }
+  ],
+  "min_fold_win_rate": 0.0,
+  "fold_warn": true,
+  "lib_versions": {
+    "sklearn": "1.9.0",
+    "xgboost": "3.2.0",
+    "numpy": "2.4.6"
+  },
+  "features": [
+    {
+      "name": "rsi_14",
+      "mean": 52.01930389916509,
+      "std": 12.072950247066354
+    },
+    {
+      "name": "rsi_slope_3",
+      "mean": -0.8178428904099304,
+      "std": 8.1145792134294
+    },
+    {
+      "name": "ema_cross_state",
+      "mean": 0.07641196013289037,
+      "std": 0.9853453193653319
+    },
+    {
+      "name": "ema_bars_since_cross",
+      "mean": 1.6245847176079735,
+      "std": 12.623684178407585
+    },
+    {
+      "name": "macd_hist_norm",
+      "mean": -8.055977254026013e-05,
+      "std": 0.0076760759666912775
+    },
+    {
+      "name": "macd_hist_delta",
+      "mean": -0.00016672180715287963,
+      "std": 0.0020268836720978055
+    },
+    {
+      "name": "bb_position",
+      "mean": 0.534226688889661,
+      "std": 0.3285415122234944
+    },
+    {
+      "name": "vol_z20",
+      "mean": -0.03754186065464848,
+      "std": 1.043868121281216
+    },
+    {
+      "name": "sent_agg",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "sent_delta_2h",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "econ_high_impact_6h",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "econ_impact_score",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "name": "xmkt_ref_return",
+      "mean": 0.031699112074957625,
+      "std": 1.8613263392610135
+    },
+    {
+      "name": "xmkt_corr_60d",
+      "mean": 0.39440948052917596,
+      "std": 0.23030858566219148
+    },
+    {
+      "name": "market_is_krx",
+      "mean": 0.6611295681063123,
+      "std": 0.4733257464810806
+    }
+  ]
+}
