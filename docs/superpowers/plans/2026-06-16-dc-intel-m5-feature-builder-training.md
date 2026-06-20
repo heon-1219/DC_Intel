@@ -75,7 +75,17 @@ Bar interval per tf: 1h→5m, 5h→15m, 24h→60m, 2d/3d/5d→1d. Cross-mkt ref 
 - deps: scikit-learn, xgboost, shap, joblib → [ml]; install on py3.11 venv.
 - `app/ml/features/builder.py`: `build_features(con, redis, stock_ref, timeframe, as_of) -> (vector: dict[name->value|None], meta)`. Reads technical_snapshots (latest ≤ as_of for the tf's bar_interval), sentiment_logs (latest ≤ as_of; null/low_conf → missing), economic_events (relevant high-impact in window), cross-market (xmkt_ref_return/corr; missing→0+flag), stocks (market_is_krx). Emits `missing`/`stale` flags. **Every query bounded by as_of.** Test with a seeded temp DB + inserted snapshots → asserts exact feature values + missing flags + as_of bounding.
 
-### M5b — training pipeline + explainability
+### M5b — training pipeline + explainability  ✅ COMPLETE (339 tests)
+> Built all six modules with TDD: `ml/split.py` (chronological 70/15/15 + 4 expanding folds),
+> `ml/gate.py` (neutral rule + win-rate/coverage + 52/30 gate + confidence + promotion guard),
+> `ml/calibrate.py` (isotonic≥5000/Platt + renormalize + ECE), `ml/explain.py` (§6 evidence,
+> 24-row bilingual templates, §8.2 oracle reproduced 43/38/19), `ml/dataset.py` (labels from
+> backfilled snapshot `close`; bar-count window for 1h/5h/2d/3d/5d, wall-clock for 24h;
+> stride=horizon), `ml/train.py` (LR+XGB grids → calibrate → gate → folds → winner → artifact
+> + manifest + feature_importance; deterministic; CLI `python -m app.ml.train --timeframe`).
+> Decisions: `HORIZON_BARS` added to shared labels.py; v1 uses config tau (no per-fold tune),
+> fixed XGB n_estimators (no early stop), XGB **gain** for global feature_importance (SHAP retained
+> for serve-time §6); model fit on train only. `.pkl` gitignored, manifests tracked.
 - `app/ml/dataset.py`: assemble training samples (per stock, stride=horizon, features as-of + realized label via labels.derive_direction over future price). Needs historical price for labels (from backfilled bars).
 - `app/ml/split.py`: chronological 70/15/15 + 4 expanding walk-forward folds (pure, tested).
 - `app/ml/calibrate.py`: per-class isotonic/Platt + renormalize (tested on synthetic probs).

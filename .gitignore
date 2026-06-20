@@ -8,5 +8,7 @@ backend/data/
 node_modules/
 frontend/dist/
 ml/artifacts/*.pkl
+backend/models/**/*.pkl
+backend/dcintel.db
 .pytest_cache/
 .obsidian/

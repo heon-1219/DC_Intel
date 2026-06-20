@@ -1,7 +1,7 @@
 import pytest
 
 from app.ml.config import FEATURE_GROUP, FEATURE_NAMES, TIMEFRAMES, load_ml_config
-from app.tracking.labels import DEAD_BAND_PCT, derive_direction
+from app.tracking.labels import DEAD_BAND_PCT, HORIZON_BARS, derive_direction
 
 
 @pytest.mark.parametrize("change,band,expected", [
@@ -16,6 +16,12 @@ def test_dead_bands_per_timeframe():
     assert DEAD_BAND_PCT == {"1h": 0.15, "5h": 0.30, "24h": 0.40,
                              "2d": 0.50, "3d": 0.60, "5d": 0.75}
     assert set(DEAD_BAND_PCT) == set(TIMEFRAMES)
+
+
+def test_horizon_bars_for_bar_count_timeframes():
+    # bar-count window step per tf (24h is wall-clock, intentionally absent).
+    assert HORIZON_BARS == {"1h": 12, "5h": 20, "2d": 2, "3d": 3, "5d": 5}
+    assert "24h" not in HORIZON_BARS
 
 
 def test_feature_contract():
