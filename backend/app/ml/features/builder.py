@@ -141,7 +141,10 @@ async def build_features(con, redis, stock_ref, timeframe: str, as_of: str):
     events = await erepo.list_in_range(con, lo, hi, country=countries)
 
     econ_stale = False
-    synced = await redis.get("cal:last_synced_at")
+    try:
+        synced = await redis.get("cal:last_synced_at")
+    except Exception:   # noqa: BLE001 - Redis outage must not break feature building (train CLI/serve)
+        synced = None
     if synced:
         econ_stale = (as_of_dt - _parse(synced)).total_seconds() > stale_sec["econ"]
 

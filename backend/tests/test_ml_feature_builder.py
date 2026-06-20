@@ -270,6 +270,22 @@ async def test_fresh_daily_technicals_not_stale(tmp_path):
     assert meta["any_stale"] is False
 
 
+class _FailingRedis:
+    async def get(self, *_a, **_k):
+        raise ConnectionError("redis down")
+
+
+@pytest.mark.asyncio
+async def test_builder_tolerates_redis_failure(tmp_path):
+    # econ staleness reads cal:last_synced_at; a Redis outage must not crash the builder.
+    db = await _db(tmp_path)
+    async with connect(db) as con:
+        ref = await srepo.get_stock(con, "005930", "KRX")
+        vec, meta = await build_features(con, _FailingRedis(), ref, "2d", "2026-06-12T00:00:00Z")
+    assert vec["econ_high_impact_6h"] == 0.0          # still computed
+    assert meta["stale"]["econ_high_impact_6h"] is False   # can't check freshness -> not penalized
+
+
 @pytest.mark.asyncio
 async def test_vector_has_all_15_features(tmp_path):
     db = await _db(tmp_path)

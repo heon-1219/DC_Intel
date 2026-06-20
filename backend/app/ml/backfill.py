@@ -54,18 +54,36 @@ async def backfill_stock(con, ref, interval: str) -> int:
     return await backfill_bars(con, ref, interval, bars)
 
 
-async def _run(db: str, intervals):
+async def _backfill_with_retry(con, ref, interval, *, attempts: int, base_delay: float) -> int:
+    """Retry a (stock, interval) fetch — yfinance (a free endpoint) rate-limits bursts, surfacing
+    as empty results or transient connection errors. Exponential backoff; returns snapshots written."""
+    last_err = None
+    for attempt in range(attempts):
+        try:
+            w = await backfill_stock(con, ref, interval)
+            if w > 0:
+                return w
+            last_err = "0 snapshots (empty/rate-limited)"
+        except Exception as e:  # noqa: BLE001
+            last_err = f"{type(e).__name__}: {e}"
+        if attempt < attempts - 1:
+            await asyncio.sleep(base_delay * (attempt + 1))
+    print(f"{ref.symbol}:{ref.exchange} {interval}: gave up after {attempts} - {last_err}")
+    return 0
+
+
+async def _run(db: str, intervals, *, delay_sec: float = 2.0, attempts: int = 4):
     from app.db.connection import connect
     from app.db.repositories import stocks as srepo
     async with connect(db) as con:
         refs = [r for r in await srepo.list_active_all(con) if r.exchange != "INDEX"]
         for ref in refs:
             for interval in intervals:
-                try:
-                    w = await backfill_stock(con, ref, interval)
+                w = await _backfill_with_retry(con, ref, interval, attempts=attempts,
+                                               base_delay=delay_sec)
+                if w:
                     print(f"{ref.symbol}:{ref.exchange} {interval}: {w} snapshots")
-                except Exception as e:  # noqa: BLE001 - best-effort per (stock, interval)
-                    print(f"{ref.symbol}:{ref.exchange} {interval}: FAILED {type(e).__name__}: {e}")
+                await asyncio.sleep(delay_sec)   # courtesy throttle between requests
 
 
 def main(argv=None):
