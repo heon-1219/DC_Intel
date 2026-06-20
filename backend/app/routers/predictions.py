@@ -4,6 +4,7 @@ never a fake/stale prediction. Every served prediction is inserted synchronously
 
 v1 deferrals (documented): the Redis prediction cache + per-TTL + audit-duplicate-on-cache-hit,
 the coverage block, and the 503 SOURCE_DEGRADED price-staleness gate (M6h refinements)."""
+import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request
@@ -95,3 +96,62 @@ async def get_predict(instrument: str, request: Request, user=Depends(get_curren
     return JSONResponse(content=make_envelope(
         data, source="model", data_as_of=as_of,
         is_stale=rj["data_staleness"]["any_stale"], cache="miss", request_id=rid))
+
+
+def _history_item(row, currency):
+    rj = json.loads(row["reasoning_json"])
+    if row["po_dir"] is None:
+        status, outcome = "pending", None
+    else:
+        status = "correct" if row["po_correct"] == 1 else "incorrect"
+        outcome = {"realized_direction": row["po_dir"], "exit_price": row["po_exit"],
+                   "move_pct": row["po_pct"], "graded_at": row["po_at"]}
+    ev = rj.get("evidence", [])
+    return {
+        "prediction_id": row["id"], "timeframe": row["timeframe"],
+        "direction": row["direction"], "confidence": row["confidence"],
+        "evidence_summary_en": " + ".join(e["text_en"] for e in ev),
+        "evidence_summary_ko": " + ".join(e["text_ko"] for e in ev),
+        "predicted_at": rj.get("predicted_at", row["created_at"]),
+        "window_closes_at": row["window_closes_at"],
+        "entry_price": rj.get("entry_price"), "currency": currency,
+        "model_version": row["model_version"], "status": status, "outcome": outcome,
+    }
+
+
+@router.get("/stocks/{instrument}/history")
+async def get_history(instrument: str, request: Request, user=Depends(get_current_user)):
+    rid = request.headers.get("x-request-id", "req_local")
+    qp = request.query_params
+    tf = qp.get("timeframe")
+    if tf is not None and tf not in TIMEFRAMES:
+        return _err(400, "INVALID_PARAM", "Bad timeframe.", "잘못된 기간이에요.", rid)
+    status = qp.get("status")
+    if status is not None and status not in ("pending", "correct", "incorrect"):
+        return _err(400, "INVALID_PARAM", "Bad status filter.", "잘못된 상태 필터예요.", rid)
+    try:
+        limit = int(qp.get("limit", 20))
+        offset = int(qp.get("offset", 0))
+    except ValueError:
+        return _err(400, "INVALID_PARAM", "Bad numeric parameter.", "숫자 형식 오류예요.", rid)
+    if not (1 <= limit <= 100) or offset < 0:
+        return _err(400, "INVALID_PARAM", "limit 1-100, offset >= 0.",
+                    "limit는 1-100, offset은 0 이상이어야 해요.", rid)
+    try:
+        symbol, exchange = parse_instrument(instrument)
+    except InvalidInstrument:
+        return _err(400, "INVALID_PARAM", "Malformed instrument.", "잘못된 종목 형식이에요.", rid)
+
+    async with connect(get_settings().sqlite_path) as con:
+        ref = await srepo.get_stock(con, symbol, exchange)
+        if ref is None:
+            return _err(404, "SYMBOL_NOT_FOUND", "Unknown stock.", "알 수 없는 종목이에요.", rid)
+        total, rows = await prepo.list_user_history(
+            con, user_id=user["id"], stock_id=ref.id, timeframe=tf, status=status,
+            limit=limit, offset=offset)
+
+    data = {"instrument": f"{symbol}:{exchange}", "total": total,
+            "items": [_history_item(r, ref.currency) for r in rows]}
+    return JSONResponse(content=make_envelope(
+        data, source="internal", data_as_of=_iso(datetime.now(timezone.utc)),
+        is_stale=False, cache="none", request_id=rid))
