@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
+from app.auth import ratelimit as rl
 from app.auth.deps import get_current_user
 from app.cache import redis as cache_redis
 from app.cache.redis import make_envelope
@@ -40,6 +41,10 @@ def _iso(dt: datetime) -> str:
 @router.get("/stocks/{instrument}/predict")
 async def get_predict(instrument: str, request: Request, user=Depends(get_current_user)):
     rid = request.headers.get("x-request-id", "req_local")
+    allowed, _, retry = await rl.hit(cache_redis.get_client(), "predict_user", str(user["id"]),
+                                     limit=30, window_sec=60)
+    if not allowed:
+        return rl.rate_limited(rid, retry, 30)
     tf = request.query_params.get("timeframe")
     if tf not in TIMEFRAMES:
         return _err(400, "INVALID_PARAM", "timeframe is required (1h,5h,24h,2d,3d,5d).",

@@ -10,8 +10,10 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from app.auth import ratelimit as rl
 from app.auth.models import LoginRequest, RegisterRequest, serialize_user
 from app.auth.security import encode_token, hash_password, verify_password
+from app.cache import redis as cache_redis
 from app.cache.redis import make_envelope
 from app.config import get_settings
 from app.db.connection import connect
@@ -67,6 +69,11 @@ async def _parse(request: Request, model):
 @router.post("/auth/register")
 async def register(request: Request):
     rid = request.headers.get("x-request-id", "req_local")
+    redis = cache_redis.get_client()
+    allowed, _, retry = await rl.hit(redis, "register_ip", rl.client_ip(request),
+                                     limit=5, window_sec=3600)
+    if not allowed:
+        return rl.rate_limited(rid, retry, 5)
     try:
         req = await _parse(request, RegisterRequest)
     except ValidationError as e:
@@ -89,13 +96,25 @@ async def login(request: Request):
     except ValidationError as e:
         return _err(422, "VALIDATION_ERROR", "Check the form and try again.",
                     "입력값을 확인해 주세요.", rid, details=_validation_details(e))
+
+    redis = cache_redis.get_client()
+    ip, em = rl.client_ip(request), rl.sha1_email(req.email)
+    b1, r1 = await rl.over_limit(redis, "login_ip", ip, limit=10, window_sec=900)
+    b2, r2 = await rl.over_limit(redis, "login_email", em, limit=10, window_sec=900)
+    if b1 or b2:
+        return rl.rate_limited(rid, max(r1, r2), 10)
+
+    async def _invalid():   # brute-force: count failed attempts (per-IP AND per-email)
+        await rl.record_failure(redis, "login_ip", ip, window_sec=900)
+        await rl.record_failure(redis, "login_email", em, window_sec=900)
+        return _err(401, "INVALID_CREDENTIALS", "Email or password is incorrect.",
+                    "이메일 또는 비밀번호가 올바르지 않아요.", rid)
+
     async with connect(get_settings().sqlite_path) as con:
         user = await urepo.get_by_email(con, req.email)
     if user is None:
         verify_password(req.password, _dummy_hash())   # timing-equalize unknown email
-        return _err(401, "INVALID_CREDENTIALS", "Email or password is incorrect.",
-                    "이메일 또는 비밀번호가 올바르지 않아요.", rid)
+        return await _invalid()
     if not verify_password(req.password, user["password_hash"]):
-        return _err(401, "INVALID_CREDENTIALS", "Email or password is incorrect.",
-                    "이메일 또는 비밀번호가 올바르지 않아요.", rid)
+        return await _invalid()
     return _auth_envelope(user, rid, 200)

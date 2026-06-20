@@ -48,6 +48,9 @@ null/stale/downgraded prediction; no predictions row inserted (nothing served). 
 **503 SOURCE_DEGRADED** (a gate-PASSED tf whose price is >30min stale in market hours with no cache).
 
 ---
+## ✅ STATUS: M6 COMPLETE — all 11 slices done (459 tests). Serving (5d enabled, rest
+## disabled-with-note), auth (register/login/JWT), history, calendar overlay, rate-limit all live.
+
 ## Slices (each TDD, commit individually)
 - **M6a — Auth core (pure):** `app/auth/security.py` (hash_password/verify_password bcrypt cost 12;
   encode_token/decode_token HS256, claims {sub,iat,exp}, 24h, no email) + `app/auth/passwords.py`
