@@ -4,7 +4,9 @@ from pathlib import Path
 import fakeredis.aioredis
 import pytest
 
+from app.db.connection import connect
 from app.db.migrate import migrate
+from app.db.repositories import stocks as srepo
 from app.db.seed import seed_stocks
 from app.jobs.price_poller import poll_indexes, poll_region
 from app.providers.base import PriceQuote
@@ -25,8 +27,10 @@ async def test_poll_region_caches_each_kr_stock(tmp_path):
     r = fakeredis.aioredis.FakeRedis(decode_responses=True)
     cb = CircuitBreaker(r)
     fake = FakeProvider("yfinance", quote=Q)
+    async with connect(db) as con:
+        expected = len(await srepo.list_active_by_region(con, "KR"))  # KR tradables, index excluded
     n = await poll_region(db, "KR", r, cb, yfinance=fake, finnhub=fake, pykrx=fake)
-    assert n == 4  # 4 KR common stocks in the seed (index pseudo-rows excluded)
+    assert n == expected and expected >= 4   # every KR common stock cached
     assert (await svc.read_cached(r, "005930", "KRX"))["price"] == 100.0
 
 

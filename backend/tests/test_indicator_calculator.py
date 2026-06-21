@@ -34,8 +34,10 @@ async def test_recompute_indicators_covers_all_active_stocks(tmp_path):
     r = fakeredis.aioredis.FakeRedis(decode_responses=True)
     cb = CircuitBreaker(r)
     bars = FakeBarProvider(bars=_frame())
+    async with connect(db) as con:
+        n_active = len(await srepo.list_active_all(con))
     total = await recompute_indicators(db, r, cb, bars_provider=bars, now=NOW)
-    assert total == 12 * 4    # 12 active stocks x 4 intervals
+    assert total == n_active * 4    # every active stock x 4 intervals
     async with connect(db) as con:
         ref = await srepo.get_stock(con, "AAPL", "NASDAQ")
         snap = await trepo.get_latest_snapshot(con, ref.id, "1h")

@@ -19,7 +19,7 @@ def test_seed_populates_when_empty(tmp_path):
     db = str(tmp_path / "t.db")
     migrate(db, MIG_DIR)
     inserted = seed_stocks(db, CSV)
-    assert inserted >= 12
+    assert inserted >= 50          # expanded universe (M8e): ~50 tradables + 5 index rows
     assert _count(db) == inserted
 
 
@@ -41,6 +41,12 @@ def test_seed_resolves_symbol_exchange(tmp_path):
     ).fetchone()
     con.close()
     assert row[0] == "005930.KS"
+    con = sqlite3.connect(db)
+    kosdaq = con.execute(
+        "SELECT yfinance_ticker, board FROM stocks WHERE symbol='196170' AND exchange='KRX'"
+    ).fetchone()
+    con.close()
+    assert kosdaq == ("196170.KQ", "KOSDAQ")   # KOSDAQ rows use the .KQ suffix
 
 
 def test_seed_nulls_empty_csv_fields(tmp_path):

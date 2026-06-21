@@ -134,4 +134,7 @@ async def test_list_active_all_includes_indexes(tmp_path):
     db = await _seed_db(tmp_path)
     async with connect(db) as con:
         refs = await srepo.list_active_all(con)
-    assert len(refs) == 12   # 7 common/ADR + 5 index pseudo-rows in the seed
+    syms = {r.symbol for r in refs}
+    # list_active_all INCLUDES the index pseudo-rows (the indicator job's scope).
+    assert {"KOSPI", "NASDAQ_COMPOSITE", "SP500", "NIKKEI225", "DAX"} <= syms
+    assert "005930" in syms and len(refs) >= 50
