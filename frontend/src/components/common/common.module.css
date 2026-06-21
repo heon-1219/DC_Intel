@@ -64,3 +64,23 @@
   composes: dot;
   background: var(--neutral);
 }
+.skeleton {
+  background: var(--skeleton);
+  border-radius: 8px;
+  margin-bottom: var(--sp-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

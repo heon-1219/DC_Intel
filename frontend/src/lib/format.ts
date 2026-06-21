@@ -34,6 +34,16 @@ export function pctSign(pct: number | null | undefined): SignClass {
 }
 
 export const DIR_ARROW: Record<Direction, string> = { up: "▲", down: "▼", neutral: "▬" };
+
+/** Arrow by the sign of a percent move (▲/▼/▬), pairing color with a glyph (§9). */
+export function pctArrow(pct: number | null | undefined): string {
+  const sign = pctSign(pct);
+  return sign === "bull" ? "▲" : sign === "bear" ? "▼" : "▬";
+}
+
+export function intNumber(n: number, lang: Lang): string {
+  return new Intl.NumberFormat(lang === "ko" ? "ko-KR" : "en-US").format(n);
+}
 export const DIR_CLASS: Record<Direction, SignClass> = { up: "bull", down: "bear", neutral: "neutral" };
 
 /** Relative "x ago" using the i18n keys (caller supplies t). */

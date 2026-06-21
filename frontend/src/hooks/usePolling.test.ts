@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { Query } from "@tanstack/react-query";
 
 import { jitter, pollInterval } from "./usePolling";
 
-const q = (fails: number) => ({ state: { fetchFailureCount: fails } }) as unknown as Query;
+const q = (fails: number) => ({ state: { fetchFailureCount: fails } });
 
 describe("polling", () => {
   it("jitter stays within ±10%", () => {

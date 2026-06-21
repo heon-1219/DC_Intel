@@ -82,6 +82,9 @@
   "intel.sentimentSure": "{pct}% sure",
   "intel.newPill": "↑ {n} new",
   "intel.cred.band": "{score} · {band}",
+  "sentiment.bullish": "Bullish",
+  "sentiment.bearish": "Bearish",
+  "sentiment.neutral": "Neutral",
 
   "outcome.win": "Hit",
   "outcome.loss": "Miss",

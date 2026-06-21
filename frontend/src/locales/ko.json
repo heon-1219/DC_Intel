@@ -82,6 +82,9 @@
   "intel.sentimentSure": "확신 {pct}%",
   "intel.newPill": "새 소식 {n}건",
   "intel.cred.band": "{score} · {band}",
+  "sentiment.bullish": "강세",
+  "sentiment.bearish": "약세",
+  "sentiment.neutral": "중립",
 
   "outcome.win": "적중",
   "outcome.loss": "빗나감",

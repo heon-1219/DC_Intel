@@ -1,0 +1,227 @@
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: var(--sp-4);
+}
+.grid {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .full {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .span2 {
+    grid-column: span 2;
+  }
+  .rail {
+    grid-column: 3;
+    grid-row: 2 / span 2;
+  }
+}
+
+.widget {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+}
+.widgetHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.widgetTitle {
+  font-size: var(--type-h2);
+  font-weight: 700;
+  margin: 0;
+}
+.empty {
+  color: var(--text-3);
+  text-align: center;
+  padding: var(--sp-5) 0;
+}
+
+/* index strip */
+.strip {
+  display: flex;
+  gap: var(--sp-3);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: var(--sp-1);
+}
+.indexTile {
+  flex: 0 0 auto;
+  min-width: 150px;
+  scroll-snap-align: start;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: var(--sp-3);
+}
+.indexName {
+  font-size: var(--type-caption);
+  color: var(--text-2);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.indexLevel {
+  font-size: var(--type-metric);
+  font-weight: 700;
+}
+.changeRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: var(--type-caption);
+}
+
+/* trending */
+.regionToggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.regionBtn {
+  min-height: 32px;
+  padding: 0 var(--sp-3);
+  border: none;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: var(--type-caption);
+  font-weight: 600;
+}
+.regionBtnActive {
+  composes: regionBtn;
+  background: var(--text);
+  color: #fff;
+}
+.carousel {
+  display: flex;
+  gap: var(--sp-3);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+@media (min-width: 768px) {
+  .carousel {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+.tCard {
+  flex: 0 0 160px;
+  scroll-snap-align: start;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: var(--sp-3);
+  text-align: left;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+.tName {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tSym {
+  font-size: var(--type-micro);
+  color: var(--text-3);
+}
+.winBadge {
+  margin-top: var(--sp-1);
+  font-size: var(--type-caption);
+  font-weight: 600;
+  padding: 2px var(--sp-2);
+  border-radius: 999px;
+  align-self: flex-start;
+}
+.winBull {
+  composes: winBadge;
+  background: var(--bull-bg);
+  color: var(--bull-text);
+}
+.winNeutral {
+  composes: winBadge;
+  background: var(--neutral-bg);
+  color: var(--neutral-text);
+}
+.winBear {
+  composes: winBadge;
+  background: var(--bear-bg);
+  color: var(--bear-text);
+}
+.collecting {
+  composes: winBadge;
+  background: var(--neutral-bg);
+  color: var(--text-3);
+}
+
+/* calendar */
+.calRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--border);
+  font-size: var(--type-body);
+}
+.calRow:first-child {
+  border-top: none;
+}
+.impactDots {
+  font-size: var(--type-micro);
+  letter-spacing: -1px;
+}
+.calBody {
+  flex: 1;
+  min-width: 0;
+}
+.calName {
+  font-weight: 600;
+}
+.calMeta {
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}
+.showAll {
+  margin-top: var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--confirmed);
+  font-size: var(--type-caption);
+}
+.bull {
+  color: var(--bull-text);
+}
+.bear {
+  color: var(--bear-text);
+}
+.neutral {
+  color: var(--neutral-text);
+}
+.impactHigh {
+  color: var(--impact-high);
+}
+.impactMed {
+  color: var(--impact-med);
+}
+.impactLow {
+  color: var(--impact-low);
+}

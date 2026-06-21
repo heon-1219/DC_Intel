@@ -165,32 +165,54 @@ export interface CalendarData {
   events: CalendarEvent[];
 }
 
-// --- market intel ---
+// --- market intel (feed.build_clusters shape) ---
+export type Sentiment = "bullish" | "bearish" | "neutral";
+export interface IntelBadge {
+  label: string;
+  style: "confirmed" | "speculation";
+  disclaimer: string;
+}
 export interface IntelItem {
-  content_snippet?: string;
-  source?: string;
-  author_handle?: string;
-  posted_at?: string;
-  lang?: string;
+  id: number;
+  source: string;
+  author_handle: string | null;
+  url: string | null;
+  content_snippet: string;
+  lang: string;
+  posted_at: string;
+  credibility_score: number;
+  sentiment: Sentiment;
+  sentiment_confidence: number;
+  confirmed: boolean;
+}
+export interface IntelStock {
+  symbol: string;
+  exchange: string;
+  name_en: string;
+  name_ko: string;
 }
 export interface IntelCluster {
   cluster_id: string;
-  badge: "confirmed" | "speculation" | string;
-  status?: string;
-  credibility: number | null;
-  credibility_band?: string;
-  sentiment: Direction | string | null;
-  sentiment_confidence?: number | null;
-  count: number;
+  status: "CONFIRMED" | "UNCONFIRMED";
+  badge: IntelBadge;
+  sentiment: Sentiment;
+  sentiment_confidence: number;
+  item_count: number;
+  distinct_authors: number;
+  max_credibility: number;
+  credibility_band: string;
+  coordinated_warning: boolean;
+  lead_time_minutes: number | null;
+  timeline: { event: string; at: string }[];
   items: IntelItem[];
-  coordinated?: boolean;
-  confirm_url?: string | null;
-  timeline?: { event: string; at: string }[];
-  stock: { symbol: string; exchange: string; name_en: string; name_ko: string } | null;
+  confirm_url: string | null;
+  stock: IntelStock | null;
 }
 export interface IntelAnomaly {
   name?: string;
   signed_pct?: number;
+  headline_en?: string;
+  headline_ko?: string;
   top_cluster_ids?: string[];
   [k: string]: unknown;
 }
