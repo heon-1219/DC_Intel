@@ -32,6 +32,14 @@ async def distinct_recent_stock_ids(con, user_id, since_iso) -> list[int]:
     return [r["stock_id"] for r in await cur.fetchall()]
 
 
+async def get_by_id(con, prediction_id: int) -> dict | None:
+    cur = await con.execute(
+        "SELECT id, stock_id, timeframe, direction, window_closes_at, created_at, checked_at, "
+        "reasoning_json FROM predictions WHERE id=?", (prediction_id,))
+    row = await cur.fetchone()
+    return dict(row) if row else None
+
+
 async def find_due(con, now_iso: str, limit: int = 200) -> list[dict]:
     """Matured, ungraded predictions (window closed, not yet checked), oldest window first."""
     cur = await con.execute(

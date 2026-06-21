@@ -38,6 +38,11 @@ from every metric, public win rates with a low-sample flag); international + bil
 - transient price unavailable/stale → retry backoff [5,10,20,40,80,160,320,640] min → park after 8.
 - parked rows: no outcome, checked_at stays NULL, excluded from every metric denominator.
 
+## ✅ STATUS: M7 COMPLETE (a–j, 495 tests). Grading pipeline + public win rates + operator backfill
+## live; outcome_checker runs every minute. DEFERRED: M7k feature_correlation (analytics, no consumer
+## yet), accuracy_report daily summary, warmup_predictions (needs a /dashboard/trending list) — all
+## non-user-facing, moved to a later analytics pass / M10.
+
 ## Slices (each TDD, commit-able)
 - **M7a** predictions repo: `find_due`, `insert_outcome` (UNIQUE prediction_id), `mark_checked`.
 - **M7b** `tracking/exit_price.py` resolve_exit_price → (price|None, status ok|stale|unavailable).

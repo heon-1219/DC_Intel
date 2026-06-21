@@ -17,9 +17,11 @@ def relevant_countries(exchange: str) -> list[str]:
     return _RELEVANT.get(exchange, ["US"])
 
 
-async def grade_prediction(con, ref, due_row: dict, exit_price: float, now_iso: str) -> dict:
+async def grade_prediction(con, ref, due_row: dict, exit_price: float, now_iso: str,
+                           *, bypass_split: bool = False) -> dict:
     """Returns {'action':'grade','outcome':{...}} ready for record_outcome, or
-    {'action':'park','reason':...} for split-suspect / missing entry price."""
+    {'action':'park','reason':...} for split-suspect / missing entry price. `bypass_split` lets the
+    operator backfill (M7j) grade past the 35% split-suspect guard on a verified manual price."""
     rj = json.loads(due_row["reasoning_json"])
     entry = rj.get("entry_price")
     band = rj.get("neutral_band_pct")
@@ -27,7 +29,7 @@ async def grade_prediction(con, ref, due_row: dict, exit_price: float, now_iso: 
         return {"action": "park", "reason": "no_entry_price"}
 
     move_pct = 100.0 * (exit_price - entry) / entry
-    if abs(move_pct) > SPLIT_SUSPECT_PCT:
+    if abs(move_pct) > SPLIT_SUSPECT_PCT and not bypass_split:
         return {"action": "park", "reason": "split_suspect"}
 
     actual = derive_direction(move_pct, band)
