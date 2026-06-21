@@ -3,7 +3,9 @@ __pycache__/
 .venv/
 *.egg-info/
 .env
-data/
+# Root-anchored: ignore the local SQLite scratch dir (./data/) WITHOUT swallowing nested source
+# `data/` dirs like backend/app/auth/data/ (the common-passwords wordlist). (migration fix 2026-06-21)
+/data/
 backend/data/
 node_modules/
 frontend/dist/
