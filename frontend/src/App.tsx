@@ -1,11 +1,14 @@
-import { useT } from "./hooks/useT";
+import { BrowserRouter } from "react-router-dom";
 
-// Placeholder shell for M9a; replaced by the router in M9b.
+import { AuthProvider } from "./hooks/useAuth";
+import AppRoutes from "./routes";
+
 export default function App() {
-  const { t } = useT();
   return (
-    <main style={{ padding: "var(--sp-5)" }}>
-      <h1>{t("app.name")}</h1>
-    </main>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

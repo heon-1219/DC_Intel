@@ -6,7 +6,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     // Local dev convenience: proxy API calls to the backend so the SPA runs same-origin.
-    proxy: { "/api": { target: "http://localhost:8000", changeOrigin: true } },
+    proxy: {
+      // SPA calls /api/*; the backend serves at root, so strip the prefix (Caddy does the same in prod).
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ""),
+      },
+    },
   },
   test: {
     globals: true,
