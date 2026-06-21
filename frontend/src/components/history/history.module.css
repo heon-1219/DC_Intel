@@ -1,0 +1,86 @@
+.trend {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.trendTitle {
+  font-size: var(--type-h2);
+  font-weight: 700;
+  margin: 0 0 var(--sp-3);
+}
+.collecting {
+  color: var(--text-3);
+  font-size: var(--type-body);
+}
+.log {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.row {
+  border-bottom: 1px solid var(--border);
+}
+.rowMain {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr 1.1fr 0.8fr 0.9fr;
+  gap: var(--sp-2);
+  align-items: center;
+  padding: var(--sp-3);
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: var(--type-body);
+}
+.rowMain:hover {
+  background: var(--bg-subtle);
+}
+.when {
+  color: var(--text-2);
+  font-size: var(--type-caption);
+}
+.detail {
+  padding: 0 var(--sp-3) var(--sp-3);
+  font-size: var(--type-caption);
+  color: var(--text-2);
+}
+.mv {
+  font-size: var(--type-micro);
+  color: var(--text-3);
+}
+.scoreLink {
+  display: inline-block;
+  margin-top: var(--sp-3);
+  background: none;
+  border: none;
+  color: var(--confirmed);
+  font-size: var(--type-caption);
+}
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  z-index: 60;
+}
+.modal {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: var(--sp-5);
+  max-width: 420px;
+}
+.bull {
+  color: var(--bull-text);
+}
+.bear {
+  color: var(--bear-text);
+}
+.neutral {
+  color: var(--neutral-text);
+}

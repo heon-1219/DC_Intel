@@ -87,6 +87,11 @@
   "sentiment.bearish": "Bearish",
   "sentiment.neutral": "Neutral",
 
+  "predict.short.up": "rise",
+  "predict.short.down": "fall",
+  "predict.short.neutral": "flat",
+  "history.collecting": "Collecting data — {n} of 20 predictions scored",
+  "history.close": "Close",
   "outcome.win": "Hit",
   "outcome.loss": "Miss",
   "outcome.pending": "Waiting for result",

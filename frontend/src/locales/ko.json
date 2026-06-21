@@ -87,6 +87,11 @@
   "sentiment.bearish": "약세",
   "sentiment.neutral": "중립",
 
+  "predict.short.up": "상승",
+  "predict.short.down": "하락",
+  "predict.short.neutral": "보합",
+  "history.collecting": "데이터 수집 중 — 20번 중 {n}번 채점 완료",
+  "history.close": "닫기",
   "outcome.win": "적중",
   "outcome.loss": "빗나감",
   "outcome.pending": "결과 기다리는 중",
