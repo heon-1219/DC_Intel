@@ -14,7 +14,7 @@ def test_scheduler_registers_all_jobs_including_indicators_and_calendar():
     sched = build_scheduler(run=False)
     ids = {j.id for j in sched.get_jobs()}
     assert ids == {"poll_prices_krx", "poll_prices_us", "poll_indexes", "heartbeat",
-                   "recompute_indicators", "sync_calendar", "econ_event_study",
+                   "recompute_indicators", "build_dashboard", "sync_calendar", "econ_event_study",
                    "intel_scrape", "aggregate_sentiment", "intel_anomaly_scan",
                    "intel_confirmation_match", "intel_author_stats", "intel_retention",
                    "outcome_checker"}

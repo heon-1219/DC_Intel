@@ -26,6 +26,7 @@ from app.intel.scraper import ingest as intel_ingest
 from app.sentiment.fetchers.finnhub_news import FinnhubNewsFetcher
 from app.sentiment.fetchers.newsapi import NewsApiFetcher
 from app.jobs.calendar_sync import sync_calendar
+from app.jobs.dashboard_builder import build_dashboard_blobs
 from app.jobs.event_study import econ_event_study
 from app.jobs.indicator_calculator import recompute_indicators
 from app.jobs.outcome_checker import run_outcome_checker
@@ -73,6 +74,9 @@ async def lifespan(app: FastAPI):
 
     async def _ind():
         await recompute_indicators(settings.sqlite_path, redis, breaker, bars_provider=bars)
+
+    async def _dash():
+        await build_dashboard_blobs(settings.sqlite_path, redis, bars)
 
     config_dir = str(Path(__file__).resolve().parents[2] / "config")
     reg_path = str(Path(config_dir) / "economic_events.yaml")
@@ -125,7 +129,8 @@ async def lifespan(app: FastAPI):
 
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
-        "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal,
+        "heartbeat": _hb, "recompute_indicators": _ind, "build_dashboard": _dash,
+        "sync_calendar": _cal,
         "econ_event_study": _study, "intel_scrape": _intel_scrape,
         "aggregate_sentiment": _agg_sentiment, "intel_anomaly_scan": _anomaly,
         "intel_confirmation_match": _confirm, "outcome_checker": _outcome,

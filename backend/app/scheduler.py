@@ -6,7 +6,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 # intel scrape + sentiment aggregation every 10 (market-intel §14 / sentiment §10).
 JOB_INTERVALS = {
     "poll_prices_krx": 1, "poll_prices_us": 1, "poll_indexes": 1,
-    "heartbeat": 1, "recompute_indicators": 5,
+    "heartbeat": 1, "recompute_indicators": 5, "build_dashboard": 1,
     "intel_scrape": 10, "aggregate_sentiment": 10, "intel_anomaly_scan": 5,
     "intel_confirmation_match": 10, "outcome_checker": 1,
 }

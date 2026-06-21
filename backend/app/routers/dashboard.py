@@ -200,3 +200,53 @@ async def market_intel(request: Request):
     return JSONResponse(content=make_envelope(
         {"as_of": _iso(now), "lang": lang, "anomalies": anomalies, "clusters": clusters},
         source="composite", data_as_of=_iso(now), is_stale=False, cache="miss", request_id=rid))
+
+
+@router.get("/dashboard/indexes")
+async def dashboard_indexes(request: Request):
+    """The 5 canonical indexes (§6.8). Read-only: returns the dash:indexes blob the 60s builder
+    writes; a cold cache yields an honest empty + is_stale (never fabricated)."""
+    rid = errors.request_id(request)
+    await get_current_user_optional(request)   # optional auth: present-but-invalid token -> 401
+    raw = await cache_redis.get_client().get("dash:indexes")
+    now = datetime.now(timezone.utc)
+    if raw:
+        blob = json.loads(raw)
+        return JSONResponse(content=make_envelope(
+            {"indexes": blob["indexes"]}, source=blob.get("source", "yfinance"),
+            data_as_of=blob.get("built_at") or _iso(now), is_stale=False, cache="hit", request_id=rid))
+    return JSONResponse(content=make_envelope(
+        {"indexes": []}, source="yfinance", data_as_of=_iso(now), is_stale=True,
+        cache="miss", request_id=rid))
+
+
+@router.get("/dashboard/trending")
+async def dashboard_trending(request: Request):
+    """Top movers per region (§6.7). Read-only: returns the dash:trending:{region} blob, sliced to
+    `limit` per gainers/losers list; cold cache -> honest empty + is_stale."""
+    rid = errors.request_id(request)
+    await get_current_user_optional(request)   # optional auth
+    qp = request.query_params
+    region = qp.get("region", "all")
+    if region not in ("kr", "us", "all"):
+        return _err(400, "INVALID_PARAM", "region must be kr, us, or all.",
+                    "region은 kr, us, all 중 하나여야 해요.", rid)
+    try:
+        limit = int(qp.get("limit", 10))
+    except ValueError:
+        return _err(400, "INVALID_PARAM", "Bad limit.", "limit 형식 오류예요.", rid)
+    if not (1 <= limit <= 20):
+        return _err(400, "INVALID_PARAM", "limit must be 1-20.", "limit는 1-20이어야 해요.", rid)
+
+    raw = await cache_redis.get_client().get(f"dash:trending:{region}")
+    now = datetime.now(timezone.utc)
+    if raw:
+        blob = json.loads(raw)
+        regions = [{**o, "gainers": o["gainers"][:limit], "losers": o["losers"][:limit]}
+                   for o in blob["regions"]]
+        return JSONResponse(content=make_envelope(
+            {"regions": regions}, source=blob.get("source", "yfinance"),
+            data_as_of=blob.get("built_at") or _iso(now), is_stale=False, cache="hit", request_id=rid))
+    return JSONResponse(content=make_envelope(
+        {"regions": []}, source="yfinance", data_as_of=_iso(now), is_stale=True,
+        cache="miss", request_id=rid))
