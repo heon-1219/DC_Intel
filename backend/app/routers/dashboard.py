@@ -72,7 +72,7 @@ async def _holdings_instruments(con, user_id: int, now: datetime) -> list[tuple[
 
 @router.get("/dashboard/economic-calendar")
 async def economic_calendar(request: Request):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     user = await get_current_user_optional(request)   # anon -> None; present-but-invalid -> 401
     qp = request.query_params
     try:
@@ -152,7 +152,7 @@ async def _read_anomalies(redis) -> list[dict]:
 
 @router.get("/dashboard/market-intel")
 async def market_intel(request: Request):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     qp = request.query_params
     lang = "ko" if qp.get("lang") == "ko" else "en"
     try:

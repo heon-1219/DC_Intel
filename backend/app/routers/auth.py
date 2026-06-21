@@ -17,6 +17,7 @@ from app.cache import redis as cache_redis
 from app.cache.redis import make_envelope
 from app.config import get_settings
 from app.core import errors
+from app.core import logging as applog
 from app.db.connection import connect
 from app.db.repositories import users as urepo
 
@@ -67,7 +68,7 @@ async def _parse(request: Request, model):
 
 @router.post("/auth/register")
 async def register(request: Request):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     redis = cache_redis.get_client()
     allowed, _, retry = await rl.hit(redis, "register_ip", rl.client_ip(request),
                                      limit=5, window_sec=3600)
@@ -84,12 +85,13 @@ async def register(request: Request):
         except sqlite3.IntegrityError:
             return _err(409, "EMAIL_TAKEN", "That email is already registered.",
                         "이미 가입된 이메일이에요.", rid)
+    applog.get_logger().info("auth.register", user_id=user["id"], email=req.email)
     return _auth_envelope(user, rid, 201)
 
 
 @router.post("/auth/login")
 async def login(request: Request):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     try:
         req = await _parse(request, LoginRequest)
     except ValidationError as e:
@@ -106,6 +108,7 @@ async def login(request: Request):
     async def _invalid():   # brute-force: count failed attempts (per-IP AND per-email)
         await rl.record_failure(redis, "login_ip", ip, window_sec=900)
         await rl.record_failure(redis, "login_email", em, window_sec=900)
+        applog.get_logger().info("auth.login.failed", ip=ip, email_sha1=em[:12])
         return _err(401, "INVALID_CREDENTIALS", "Email or password is incorrect.",
                     "이메일 또는 비밀번호가 올바르지 않아요.", rid)
 
@@ -116,4 +119,5 @@ async def login(request: Request):
         return await _invalid()
     if not verify_password(req.password, user["password_hash"]):
         return await _invalid()
+    applog.get_logger().info("auth.login.success", user_id=user["id"])
     return _auth_envelope(user, rid, 200)

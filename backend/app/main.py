@@ -7,6 +7,8 @@ from fastapi.exceptions import RequestValidationError
 
 from app.cache import redis as cache_redis
 from app.core import errors
+from app.core import logging as applog
+from app.core.middleware import RequestIdMiddleware
 from app.calendar.providers.finnhub_calendar_provider import FinnhubCalendarProvider
 from app.calendar.providers.fred_provider import FredProvider
 from app.calendar.providers.investing_provider import InvestingProvider
@@ -46,6 +48,9 @@ async def lifespan(app: FastAPI):
     """Start the price-poller scheduler with real providers/redis. Not run by the test
     ASGI transport, so unit tests never start real jobs."""
     settings = get_settings()
+    applog.configure_logging(settings.log_level)
+    log = applog.get_logger()
+    log.info("app.start", env=settings.env)
     redis = cache_redis.get_client()
     breaker = CircuitBreaker(redis)
     yf = YFinanceProvider()
@@ -128,12 +133,15 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        log.info("app.stop")
         sched.shutdown(wait=False)
         await redis.aclose()
 
 
 def create_app() -> FastAPI:
+    applog.configure_logging(get_settings().log_level)
     app = FastAPI(title="DC Intel API", version="0.1.0", lifespan=lifespan)
+    app.add_middleware(RequestIdMiddleware)
     app.add_exception_handler(AuthError, auth_error_handler)
     app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)
     app.add_exception_handler(Exception, errors.unhandled_exception_handler)

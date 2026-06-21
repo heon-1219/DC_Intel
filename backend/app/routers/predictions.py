@@ -16,6 +16,7 @@ from app.cache import redis as cache_redis
 from app.cache.redis import make_envelope
 from app.config import get_settings
 from app.core import errors
+from app.core import logging as applog
 from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
 from app.db.repositories import predictions as prepo
@@ -39,7 +40,7 @@ def _iso(dt: datetime) -> str:
 
 @router.get("/stocks/{instrument}/predict")
 async def get_predict(instrument: str, request: Request, user=Depends(get_current_user)):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     allowed, _, retry = await rl.hit(cache_redis.get_client(), "predict_user", str(user["id"]),
                                      limit=30, window_sec=60)
     if not allowed:
@@ -81,6 +82,10 @@ async def get_predict(instrument: str, request: Request, user=Depends(get_curren
             confidence=rj["confidence"], reasoning_json=rj, model_version=rj["model_version"],
             window_closes_at=window)
 
+    applog.get_logger().info(
+        "prediction.created", user_id=user["id"], instrument=f"{symbol}:{exchange}",
+        timeframe=tf, direction=rj["direction"], confidence=rj["confidence"],
+        model_version=rj["model_version"], prediction_id=pid, cache="miss")
     data = {
         "prediction_id": pid, "instrument": f"{symbol}:{exchange}",
         "name_en": ref.company_name or ref.symbol,
@@ -125,7 +130,7 @@ def _history_item(row, currency):
 
 @router.get("/stocks/{instrument}/history")
 async def get_history(instrument: str, request: Request, user=Depends(get_current_user)):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     qp = request.query_params
     tf = qp.get("timeframe")
     if tf is not None and tf not in TIMEFRAMES:

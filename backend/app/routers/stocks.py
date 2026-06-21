@@ -32,7 +32,7 @@ def _iso(now: datetime) -> str:
 
 @router.get("/stocks/{instrument}/price")
 async def get_price(instrument: str, request: Request):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     try:
         symbol, exchange = parse_instrument(instrument)
     except InvalidInstrument:
@@ -74,7 +74,7 @@ async def get_price(instrument: str, request: Request):
 
 @router.get("/stocks/{instrument}/prices-across-markets")
 async def get_prices_across_markets(instrument: str, request: Request):
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     try:
         symbol, exchange = parse_instrument(instrument)
     except InvalidInstrument:
@@ -103,7 +103,7 @@ _ACC_TTL = 300   # accuracy stats cache TTL (sec); busted eagerly by the outcome
 @router.get("/stocks/{instrument}/accuracy")
 async def get_accuracy(instrument: str, request: Request):
     """Public (no auth) win-rate stats for a stock — the trust anchor (win-loss §8.2)."""
-    rid = request.headers.get("x-request-id", "req_local")
+    rid = errors.request_id(request)
     qp = request.query_params
     tf = qp.get("timeframe")
     if tf is not None and tf not in TIMEFRAMES:
