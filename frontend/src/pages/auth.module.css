@@ -1,0 +1,105 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-6);
+}
+.logo {
+  font-size: var(--type-h1);
+  font-weight: 800;
+  margin: 0 0 var(--sp-2);
+}
+.title {
+  font-size: var(--type-h2);
+  font-weight: 700;
+  margin: 0 0 var(--sp-5);
+  color: var(--text-2);
+}
+.field {
+  margin-bottom: var(--sp-4);
+}
+.label {
+  display: block;
+  font-size: var(--type-caption);
+  color: var(--text-2);
+  margin-bottom: var(--sp-1);
+}
+.inputRow {
+  position: relative;
+  display: flex;
+}
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-3);
+  font-size: var(--type-body);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.input:focus-visible {
+  border-color: var(--focus-ring);
+}
+.toggle {
+  position: absolute;
+  right: var(--sp-2);
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 44px;
+  min-height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--type-caption);
+}
+.fieldError {
+  color: var(--error);
+  font-size: var(--type-caption);
+  margin-top: var(--sp-1);
+}
+.formError {
+  color: var(--error);
+  background: var(--bear-bg);
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: var(--sp-3);
+  font-size: var(--type-body);
+  margin-bottom: var(--sp-4);
+}
+.submit {
+  width: 100%;
+  min-height: 48px;
+  background: var(--text);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: var(--type-body);
+  font-weight: 700;
+}
+.submit:disabled {
+  opacity: 0.5;
+}
+.alt {
+  display: block;
+  text-align: center;
+  margin-top: var(--sp-4);
+  font-size: var(--type-body);
+  color: var(--confirmed);
+  text-decoration: none;
+}
+.forgot {
+  display: block;
+  text-align: center;
+  margin-top: var(--sp-3);
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}

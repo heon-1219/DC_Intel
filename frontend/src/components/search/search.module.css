@@ -1,0 +1,115 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(0 0 0 / 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--sp-4);
+}
+@media (min-width: 768px) {
+  .backdrop {
+    padding-top: 64px;
+  }
+}
+.panel {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+  overflow: hidden;
+}
+/* xs/sm: bottom sheet */
+@media (max-width: 639px) {
+  .backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .panel {
+    max-width: 100%;
+    border-radius: var(--radius) var(--radius) 0 0;
+    max-height: 85vh;
+  }
+}
+.input {
+  width: 100%;
+  min-height: 52px;
+  padding: var(--sp-4);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--type-h2);
+  outline: none;
+}
+.list {
+  max-height: 60vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.group {
+  padding: var(--sp-3) var(--sp-4) var(--sp-1);
+  font-weight: 700;
+  font-size: var(--type-body);
+  border-top: 1px solid var(--border);
+}
+.groupSub {
+  font-weight: 400;
+  color: var(--text-3);
+  font-size: var(--type-caption);
+  margin-left: var(--sp-2);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  min-height: 44px;
+}
+.rowActive {
+  composes: row;
+  background: var(--bg-subtle);
+}
+.rowMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rowSym {
+  font-size: var(--type-caption);
+  color: var(--text-2);
+}
+.rowPrice {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.primaryTag {
+  font-size: var(--type-micro);
+  color: var(--confirmed);
+  border: 1px solid var(--confirmed);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.diff {
+  font-size: var(--type-caption);
+  font-weight: 600;
+}
+.msg {
+  padding: var(--sp-5) var(--sp-4);
+  text-align: center;
+  color: var(--text-3);
+}
+.bull {
+  color: var(--bull-text);
+}
+.bear {
+  color: var(--bear-text);
+}
+.neutral {
+  color: var(--neutral-text);
+}
