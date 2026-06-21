@@ -16,7 +16,8 @@ def test_scheduler_registers_all_jobs_including_indicators_and_calendar():
     assert ids == {"poll_prices_krx", "poll_prices_us", "poll_indexes", "heartbeat",
                    "recompute_indicators", "sync_calendar", "econ_event_study",
                    "intel_scrape", "aggregate_sentiment", "intel_anomaly_scan",
-                   "intel_confirmation_match", "intel_author_stats", "intel_retention"}
+                   "intel_confirmation_match", "intel_author_stats", "intel_retention",
+                   "outcome_checker"}
 
 
 def test_event_study_is_a_daily_cron_at_0200_utc():

@@ -24,6 +24,7 @@ from app.sentiment.fetchers.newsapi import NewsApiFetcher
 from app.jobs.calendar_sync import sync_calendar
 from app.jobs.event_study import econ_event_study
 from app.jobs.indicator_calculator import recompute_indicators
+from app.jobs.outcome_checker import run_outcome_checker
 from app.jobs.price_poller import poll_indexes, poll_region
 from app.providers.breaker import CircuitBreaker
 from app.sentiment.classify import ZeroShotClassifier
@@ -112,12 +113,15 @@ async def lifespan(app: FastAPI):
     async def _retention():
         await purge_old_intel(settings.sqlite_path)
 
+    async def _outcome():
+        await run_outcome_checker(settings.sqlite_path, redis)
+
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
         "heartbeat": _hb, "recompute_indicators": _ind, "sync_calendar": _cal,
         "econ_event_study": _study, "intel_scrape": _intel_scrape,
         "aggregate_sentiment": _agg_sentiment, "intel_anomaly_scan": _anomaly,
-        "intel_confirmation_match": _confirm,
+        "intel_confirmation_match": _confirm, "outcome_checker": _outcome,
         "intel_author_stats": _author_stats, "intel_retention": _retention})
     try:
         yield

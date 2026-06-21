@@ -33,6 +33,12 @@ async def get_stock(con, symbol: str, exchange: str) -> StockRef | None:
     return _row_to_ref(row) if row else None
 
 
+async def get_by_id(con, stock_id: int) -> StockRef | None:
+    cur = await con.execute(f"SELECT {_COLS} FROM stocks WHERE id = ?", (stock_id,))
+    row = await cur.fetchone()
+    return _row_to_ref(row) if row else None
+
+
 async def list_active_by_region(con, region: str) -> list[StockRef]:
     cur = await con.execute(
         f"SELECT {_COLS} FROM stocks WHERE region = ? AND is_active = 1 "
