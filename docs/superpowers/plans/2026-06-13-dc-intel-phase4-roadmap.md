@@ -1,5 +1,9 @@
 # DC Intel — Phase 4 Implementation Roadmap
 
+> **STATUS (2026-06-21): ✅ M0–M7 COMPLETE. NEXT: M8 (dashboard endpoints) → M9 (React frontend,
+> incl. the overnight board) → M10 (hardening/deploy).** See `handoff.md` (repo root) for the
+> authoritative current state + cold-start steps; `CLAUDE.md` for binding standards.
+
 > **For agentic workers:** this is the **program roadmap** — the ordered milestones, dependencies, and test strategy. Each milestone gets its own detailed TDD plan (file `docs/superpowers/plans/YYYY-MM-DD-dc-intel-<Mn>-<name>.md`) written just before it is executed. The first one (`...-m0-foundation.md`) already exists. Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` per milestone plan.
 
 **Goal:** Build the DC Intel stock-direction prediction platform v1 from the 12 approved `/docs`, runnable end-to-end on localhost for $0 against real data.

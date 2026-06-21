@@ -20,13 +20,24 @@ Living doc to prevent information loss across check-ins and sessions. **Update a
 - **Mode:** inline execution; check in with owner after each task (commit boundary).
 - **Branch:** `main` (fresh repo, git init'd in Task 1).
 
-## How to resume (cold start)
-1. Read this file, then the two plan docs:
-   - `docs/superpowers/plans/2026-06-13-dc-intel-phase4-roadmap.md` (program roadmap, M0–M10 + test strategy)
-   - `docs/superpowers/plans/2026-06-13-dc-intel-m0-foundation.md` (current milestone, task-by-task TDD)
-2. `git log --oneline` → see completed tasks (each task = one commit).
-3. Continue from the first unchecked `- [ ]` task in the current milestone plan.
-4. Backend tests: `backend\.venv\Scripts\python.exe -m pytest backend\tests -v` (or `uv run --project backend pytest`).
+## How to resume (cold start — any machine, incl. a fresh homeserver clone)
+1. Read `CLAUDE.md` (auto-loaded; binding standards + setup) then this file, then
+   `docs/superpowers/plans/2026-06-13-dc-intel-phase4-roadmap.md` (program roadmap M0–M10) and the
+   latest per-milestone plan in `docs/superpowers/plans/`.
+2. **Set up the env** (NOT in git — regenerate):
+   - `uv venv --python 3.11 backend/.venv` then
+     `uv pip install -p backend/.venv/Scripts/python.exe -e "./backend[dev,ml]"`
+     (Linux venv python: `backend/.venv/bin/python`; set `UV_HTTP_TIMEOUT=900` — CPU torch is big).
+   - `cp .env.example .env` and set `JWT_SECRET` (≥32 chars).
+3. `git log --oneline` → completed tasks (one commit per task). Continue from the next milestone.
+4. Backend tests: `backend/.venv/Scripts/python.exe -m pytest backend/tests` (Win) /
+   `backend/.venv/bin/python -m pytest backend/tests` (Linux). 495 pass, 8 live deselected.
+5. Run the stack: `docker compose up -d --build` → http://localhost/healthz = 200.
+6. **Prediction serving needs model `.pkl`** (gitignored — see "NOT in git" in CLAUDE.md). After a
+   fresh clone, `GET /stocks/{i}/predict` returns 503 until models are present: either re-run M5
+   training (`python -m app.ml.backfill --db <db>` then `python -m app.ml.train --timeframe 5d
+   --db <db> --models-root backend/models`) or copy `backend/models/**/*.pkl` from another machine.
+   Manifests (gate results) are in git; only the weights need restoring.
 
 ## Environment (verified 2026-06-13)
 - OS: Windows 11, PowerShell. **Project path has spaces + Korean — always quote paths.**
