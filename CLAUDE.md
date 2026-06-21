@@ -37,7 +37,7 @@ git clone <repo> && cd "DC Intel"
 uv venv --python 3.11 backend/.venv                 # uv fetches 3.11 if absent
 uv pip install -p backend/.venv/Scripts/python.exe -e "./backend[dev,ml]"   # ml is heavy (CPU torch)
 cp .env.example .env                                # then edit: JWT_SECRET is REQUIRED (>=32 chars)
-backend/.venv/Scripts/python.exe -m pytest backend/tests        # 495 passing, 8 live deselected
+backend/.venv/Scripts/python.exe -m pytest backend/tests        # 559 passing, 8 live deselected
 docker compose up -d --build                        # http://localhost/healthz = 200
 ```
 On Linux/macOS the venv python is `backend/.venv/bin/python`. Set `$env:UV_HTTP_TIMEOUT=900` (or
@@ -57,6 +57,8 @@ Claude's auto-memory (`~/.claude/projects/.../memory/`) is **machine-local and d
 git**. This file + `handoff.md` + the plan docs are the authoritative, repo-tracked project memory.
 
 ## Status (see handoff.md for detail)
-✅ M0–M7 complete (foundation, market data, indicators, economic calendar, sentiment/intel, ML
-feature builder + training, prediction serving + auth, win-loss tracking). **NEXT: M8** (dashboard
-endpoints) → M9 (React frontend, incl. the overnight board) → M10 (hardening + deploy).
+✅ M0–M8 complete (foundation, market data, indicators, economic calendar, sentiment/intel, ML
+feature builder + training, prediction serving + auth, win-loss tracking, dashboard endpoints +
+full cross-cutting hardening). M8 is code-complete (559 tests); the docker-compose smoke is pending
+a Docker install on the homeserver. **NEXT: M9** (React frontend, incl. the overnight board) → M10
+(hardening + deploy).
