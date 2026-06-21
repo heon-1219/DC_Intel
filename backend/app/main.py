@@ -8,7 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from app.cache import redis as cache_redis
 from app.core import errors
 from app.core import logging as applog
-from app.core.middleware import RequestIdMiddleware
+from app.core.middleware import RateLimitMiddleware, RequestIdMiddleware
 from app.calendar.providers.finnhub_calendar_provider import FinnhubCalendarProvider
 from app.calendar.providers.fred_provider import FredProvider
 from app.calendar.providers.investing_provider import InvestingProvider
@@ -141,6 +141,9 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     applog.configure_logging(get_settings().log_level)
     app = FastAPI(title="DC Intel API", version="0.1.0", lifespan=lifespan)
+    # Order: RateLimit added first (inner), RequestId last (outer) — so request_id is set before the
+    # limiter runs and is present on the 429 body + X-Request-ID header.
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(RequestIdMiddleware)
     app.add_exception_handler(AuthError, auth_error_handler)
     app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)
