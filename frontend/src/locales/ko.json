@@ -39,6 +39,7 @@
   "predict.evidence.empty": "지금은 근거 신호가 부족해요",
   "predict.unavailable": "예측을 불러오지 못했어요",
   "predict.degraded": "실시간 가격이 지연되어 예측을 잠시 멈췄어요. 잠시 후 다시 시도해 주세요.",
+  "predict.modelUnavailable": "이 기간 예측은 아직 시험 중이에요 — 다른 기간을 선택해 주세요.",
   "predict.tab": "예측",
   "history.tab": "기록",
 

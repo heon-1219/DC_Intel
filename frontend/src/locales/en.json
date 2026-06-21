@@ -39,6 +39,7 @@
   "predict.evidence.empty": "Not enough signals right now",
   "predict.unavailable": "Prediction unavailable — try again",
   "predict.degraded": "Live price is delayed — prediction paused. Try again shortly.",
+  "predict.modelUnavailable": "This timeframe is still in testing — try another window.",
   "predict.tab": "Prediction",
   "history.tab": "History",
 

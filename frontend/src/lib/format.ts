@@ -44,6 +44,23 @@ export function pctArrow(pct: number | null | undefined): string {
 export function intNumber(n: number, lang: Lang): string {
   return new Intl.NumberFormat(lang === "ko" ? "ko-KR" : "en-US").format(n);
 }
+
+/** Month-day + local time in the user's tz (e.g. "Jun 13, 14:35" / "6월 13일 14:35"). */
+export function localDateTime(iso: string, lang: Lang): string {
+  return new Intl.DateTimeFormat(lang === "ko" ? "ko-KR" : "en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
+
+/** CSS color var for a direction (background fills). */
+export const DIR_BG: Record<Direction, string> = {
+  up: "var(--bull)",
+  down: "var(--bear)",
+  neutral: "var(--neutral)",
+};
 export const DIR_CLASS: Record<Direction, SignClass> = { up: "bull", down: "bear", neutral: "neutral" };
 
 /** Relative "x ago" using the i18n keys (caller supplies t). */
