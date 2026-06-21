@@ -1,14 +1,18 @@
+import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from app.cache import redis as cache_redis
+from app.cache.redis import make_envelope
 from app.config import get_settings
 from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
+from app.db.repositories import accuracy as accrepo
 from app.db.repositories import stocks as repo
 from app.market.hours import market_state
+from app.ml.config import TIMEFRAMES
 from app.providers.fx_provider import FxProvider
 from app.services import price as svc
 from app.services.fx import get_usdkrw
@@ -91,3 +95,54 @@ async def get_prices_across_markets(instrument: str, request: Request):
         "meta": {"source": "composite", "data_as_of": _iso(now),
                  "is_stale": False, "cache": "miss", "request_id": rid},
     })
+
+
+_ACC_TTL = 300   # accuracy stats cache TTL (sec); busted eagerly by the outcome_checker on each grade
+
+
+@router.get("/stocks/{instrument}/accuracy")
+async def get_accuracy(instrument: str, request: Request):
+    """Public (no auth) win-rate stats for a stock — the trust anchor (win-loss §8.2)."""
+    rid = request.headers.get("x-request-id", "req_local")
+    qp = request.query_params
+    tf = qp.get("timeframe")
+    if tf is not None and tf not in TIMEFRAMES:
+        return _err(400, "INVALID_PARAM", "Bad timeframe.", "잘못된 기간이에요.", rid)
+    window = qp.get("window", "all")
+    if window not in ("30d", "90d", "all"):
+        return _err(400, "INVALID_PARAM", "window must be 30d, 90d, or all.",
+                    "window는 30d, 90d, all 중 하나여야 해요.", rid)
+    include_mv = qp.get("include_model_versions", "false").lower() == "true"
+    try:
+        symbol, exchange = parse_instrument(instrument)
+    except InvalidInstrument:
+        return _err(400, "INVALID_PARAM", "Malformed instrument.", "잘못된 종목 형식이에요.", rid)
+
+    redis = cache_redis.get_client()
+    now_iso = _iso(datetime.now(timezone.utc))
+    key = f"acc:{symbol}:{exchange}:{tf or 'all'}:{window}" + (":mv" if include_mv else "")
+
+    data, cache_status = None, "miss"
+    try:
+        raw = await redis.get(key)
+        if raw:
+            data, cache_status = json.loads(raw), "hit"
+    except Exception:  # noqa: BLE001 - fail-open: compute live
+        pass
+
+    if data is None:
+        async with connect(get_settings().sqlite_path) as con:
+            ref = await repo.get_stock(con, symbol, exchange)
+            if ref is None:
+                return _err(404, "SYMBOL_NOT_FOUND", "Unknown stock.", "알 수 없는 종목이에요.", rid)
+            stats = await accrepo.accuracy_stats(con, ref.id, window=window, now_iso=now_iso,
+                                                 include_model_versions=include_mv, timeframe=tf)
+        data = {"instrument": f"{symbol}:{exchange}", "window": window, **stats}
+        try:
+            await redis.set(key, json.dumps(data), ex=_ACC_TTL)
+        except Exception:  # noqa: BLE001
+            pass
+
+    return JSONResponse(content=make_envelope(
+        data, source="internal", data_as_of=now_iso, is_stale=False,
+        cache=cache_status, request_id=rid))
