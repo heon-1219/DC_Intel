@@ -19,6 +19,7 @@ from app.core import errors
 from app.core import logging as applog
 from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
+from app.market.hours import market_state
 from app.db.repositories import predictions as prepo
 from app.db.repositories import stocks as srepo
 from app.ml.config import TIMEFRAMES
@@ -36,6 +37,20 @@ def _err(status, code, en, ko, rid, details=None):
 
 def _iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+_PRICE_STALE_S = 1800   # §9.4 price-staleness guard: 30 min
+
+
+def price_is_degraded(state: str, cached, now: datetime) -> bool:
+    """§9.4: during the stock's MARKET HOURS, a freshest price older than 30 min (or no price at all)
+    is too stale to predict honestly. Outside market hours the last close is valid -> not degraded."""
+    if state != "open":
+        return False
+    if not cached:
+        return True
+    age = (now - datetime.fromisoformat(cached["as_of"].replace("Z", "+00:00"))).total_seconds()
+    return age > _PRICE_STALE_S
 
 
 @router.get("/stocks/{instrument}/predict")
@@ -71,6 +86,11 @@ async def get_predict(instrument: str, request: Request, user=Depends(get_curren
         as_of = _iso(now)
         cached = await price_svc.read_cached(redis, symbol, exchange)
         entry_price = cached["price"] if cached else None
+        if price_is_degraded(market_state(exchange, now), cached, now):
+            # v1 has no prediction cache to fall back to (documented) -> degrade honestly (§9.4).
+            return _err(503, "SOURCE_DEGRADED",
+                        "Live price is delayed; prediction is paused until it refreshes.",
+                        "실시간 가격이 지연되어 예측을 잠시 멈췄어요.", rid)
         window = compute_window_close(as_of, tf)
 
         artifact = load_artifact(settings.model_dir, tf)

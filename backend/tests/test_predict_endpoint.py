@@ -1,7 +1,7 @@
 """M6h GET /stocks/{i}/predict (backend-design ENDPOINTS §6.5). Auth-required; serves only the
 gate-passed 5d (others -> 503 MODEL_UNAVAILABLE, the disabled-with-note core); inserts an audit row."""
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import fakeredis.aioredis
@@ -137,3 +137,30 @@ async def test_predict_5d_happy_path_and_audit_insert(predict_client):
     async with connect(get_settings().sqlite_path) as con:
         cur = await con.execute("SELECT COUNT(*) AS c FROM predictions WHERE id=?", (d["prediction_id"],))
         assert (await cur.fetchone())["c"] == 1
+
+
+@pytest.mark.asyncio
+async def test_predict_stale_price_in_market_hours_503(predict_client, monkeypatch):
+    """§9.4: market open + price >30min old -> 503 SOURCE_DEGRADED (no pred cache to fall back on)."""
+    monkeypatch.setattr("app.routers.predictions.market_state", lambda exch, now: "open")
+    client, fake = predict_client
+    stale = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    async with client as c:
+        h = {"Authorization": f"Bearer {await _token(c)}"}
+        await fake.set("px:quote:005930:KRX", json.dumps(
+            {"price": 84300.0, "previous_close": 83000.0, "as_of": stale, "currency": "KRW"}))
+        r = await c.get("/stocks/005930:KRX/predict?timeframe=5d", headers=h)
+    assert r.status_code == 503 and r.json()["error"]["code"] == "SOURCE_DEGRADED"
+
+
+@pytest.mark.asyncio
+async def test_predict_fresh_price_in_market_hours_ok(predict_client, monkeypatch):
+    monkeypatch.setattr("app.routers.predictions.market_state", lambda exch, now: "open")
+    client, fake = predict_client
+    fresh = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    async with client as c:
+        h = {"Authorization": f"Bearer {await _token(c)}"}
+        await fake.set("px:quote:005930:KRX", json.dumps(
+            {"price": 84300.0, "previous_close": 83000.0, "as_of": fresh, "currency": "KRW"}))
+        r = await c.get("/stocks/005930:KRX/predict?timeframe=5d", headers=h)
+    assert r.status_code == 200
