@@ -17,7 +17,7 @@ def test_scheduler_registers_all_jobs_including_indicators_and_calendar():
                    "recompute_indicators", "build_dashboard", "sync_calendar", "econ_event_study",
                    "intel_scrape", "aggregate_sentiment", "intel_anomaly_scan",
                    "intel_confirmation_match", "intel_author_stats", "intel_retention",
-                   "outcome_checker"}
+                   "outcome_checker", "win_rate_monitor", "db_backup"}
 
 
 def test_event_study_is_a_daily_cron_at_0200_utc():

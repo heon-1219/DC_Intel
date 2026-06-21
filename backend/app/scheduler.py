@@ -17,6 +17,8 @@ JOB_CRONS = {
     "econ_event_study": {"hour": 2, "minute": 0},
     "intel_author_stats": {"hour": 18, "minute": 0},
     "intel_retention": {"hour": 18, "minute": 30},
+    "db_backup": {"hour": 19, "minute": 30},          # 04:30 KST — quietest cross-market window
+    "win_rate_monitor": {"hour": 22, "minute": 30},   # 07:30 KST
 }
 JOB_IDS = list(JOB_INTERVALS) + list(JOB_CRONS)
 

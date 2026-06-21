@@ -1,17 +1,26 @@
 :80 {
-	handle /healthz {
+	encode gzip
+
+	# Security headers (deployment-architecture §9.2). Strict CSP: no inline/remote scripts (Vite emits
+	# external JS); inline STYLE attributes are used (sparkline/bar widths) so style-src allows them.
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	# API: strip the /api prefix and proxy to the root-mounted backend (no SPA/API path collision).
+	handle /api/* {
+		uri strip_prefix /api
 		reverse_proxy backend:8000
 	}
-	handle /auth/* {
-		reverse_proxy backend:8000
-	}
-	handle /stocks/* {
-		reverse_proxy backend:8000
-	}
-	handle /dashboard/* {
-		reverse_proxy backend:8000
-	}
+
+	# Everything else: the SPA, with history-API fallback to index.html.
 	handle {
-		respond "DC Intel — frontend mounts here in M9" 200
+		root * /srv
+		try_files {path} /index.html
+		file_server
 	}
 }

@@ -7,18 +7,29 @@ services:
       - JWT_SECRET=${JWT_SECRET:-dev-only-change-me-0000000000000000}
       - DATABASE_URL=sqlite+aiosqlite:////data/dcintel.db
       - REDIS_URL=redis://redis:6379/0
+      - TRUST_PROXY=true                       # reachable only via Caddy on the compose network
+      - ALERT_LOG_PATH=/data/logs/alerts.log   # persisted in the dbdata volume
+      - BACKUP_DIR=/data/backups
+      - FINNHUB_API_KEY=${FINNHUB_API_KEY:-}
+      - FRED_API_KEY=${FRED_API_KEY:-}
+      - NEWSAPI_API_KEY=${NEWSAPI_API_KEY:-}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID:-}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET:-}
+      - STOCKTWITS_ACCESS_TOKEN=${STOCKTWITS_ACCESS_TOKEN:-}
+      - TWITTER_AUTH_TOKEN=${TWITTER_AUTH_TOKEN:-}
+      - TWITTER_CT0=${TWITTER_CT0:-}
     volumes:
-      - dbdata:/data
+      - dbdata:/data # SQLite file, model artifacts, local backups, alert log
     depends_on: [redis]
     restart: unless-stopped
   redis:
     image: redis:7-alpine
     restart: unless-stopped
   web:
-    image: caddy:2-alpine
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     ports: ["80:80"]
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on: [backend]
     restart: unless-stopped
 volumes:

@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     twitter_ct0: str = ""
     twitter_cookies_file: str = ""
     newsapi_api_key: str = ""
+    # M10 ops (deployment-architecture §2.3/§8.3): win-rate alerting + local backup + alert channel
+    win_rate_alert_threshold: float = 0.50
+    win_rate_warn_threshold: float = 0.52
+    win_rate_min_sample: int = 30
+    alert_webhook_url: str = ""  # unset in v1 → alerts go to alert_log_path + console only
+    alert_log_path: str = "logs/alerts.log"
+    backup_dir: str = "/data/backups"
+    backup_bucket: str = ""  # unset in v1 → nightly snapshot stays in the local backup_dir
 
     @field_validator("jwt_secret")
     @classmethod
