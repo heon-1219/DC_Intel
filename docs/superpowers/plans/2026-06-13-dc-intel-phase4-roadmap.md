@@ -1,9 +1,9 @@
 # DC Intel — Phase 4 Implementation Roadmap
 
-> **STATUS (2026-06-21): ✅ M0–M8 COMPLETE (M8 code-complete, full hardening, 559 tests; docker
-> smoke pending Docker install on the homeserver). NEXT: M9 (React frontend, incl. the overnight
-> board) → M10 (hardening/deploy).** See `handoff.md` (repo root) for the authoritative current
-> state + cold-start steps; `CLAUDE.md` for binding standards.
+> **STATUS (2026-06-21): ✅ M0–M10 CODE-COMPLETE.** Backend 564 pytest + frontend 44 vitest +
+> `vite build` all green. The single remaining gate is the `docker compose up` end-to-end smoke —
+> Docker is not yet installed on the homeserver (needs sudo); run it there to ship. See `handoff.md`
+> (repo root) for the authoritative current state + cold-start steps; `CLAUDE.md` for binding standards.
 
 > **For agentic workers:** this is the **program roadmap** — the ordered milestones, dependencies, and test strategy. Each milestone gets its own detailed TDD plan (file `docs/superpowers/plans/YYYY-MM-DD-dc-intel-<Mn>-<name>.md`) written just before it is executed. The first one (`...-m0-foundation.md`) already exists. Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` per milestone plan.
 

@@ -57,8 +57,9 @@ Claude's auto-memory (`~/.claude/projects/.../memory/`) is **machine-local and d
 git**. This file + `handoff.md` + the plan docs are the authoritative, repo-tracked project memory.
 
 ## Status (see handoff.md for detail)
-✅ M0–M8 complete (foundation, market data, indicators, economic calendar, sentiment/intel, ML
-feature builder + training, prediction serving + auth, win-loss tracking, dashboard endpoints +
-full cross-cutting hardening). M8 is code-complete (559 tests); the docker-compose smoke is pending
-a Docker install on the homeserver. **NEXT: M9** (React frontend, incl. the overnight board) → M10
-(hardening + deploy).
+✅ **M0–M10 CODE-COMPLETE** (foundation, market data, indicators, economic calendar, sentiment/intel,
+ML training, prediction serving + auth, win-loss tracking, dashboard API + full hardening, React+Vite
+frontend, local-first deploy). Backend 564 pytest + frontend 44 vitest + `vite build` all green. The
+only remaining gate is the `docker compose up` end-to-end smoke — **Docker is not yet installed on the
+homeserver** (needs sudo); run it there to ship. Frontend toolchain: Node via nvm
+(`~/.nvm/versions/node/v24.17.0/bin`); `cd frontend && npm run dev|test|build`.
