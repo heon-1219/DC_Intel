@@ -63,3 +63,13 @@ async def get_latest_at(con, stock_id: int, bar_interval: str, as_of: str) -> di
     get_latest_snapshot). Used by the feature builder (bar t) + M6 serving + M7 grading."""
     rows = await get_recent_at(con, stock_id, bar_interval, as_of, limit=1)
     return rows[0] if rows else None
+
+
+async def get_first_at_or_after(con, stock_id: int, bar_interval: str, ts: str) -> dict | None:
+    """The earliest snapshot with timestamp >= ts (the realized price at/after a window close).
+    Used by M7 grading to read the exit-bar close once it has been computed."""
+    cur = await con.execute(
+        "SELECT * FROM technical_snapshots WHERE stock_id=? AND bar_interval=? AND timestamp>=? "
+        "ORDER BY timestamp ASC LIMIT 1", (stock_id, bar_interval, ts))
+    row = await cur.fetchone()
+    return _row_to_dict(row) if row is not None else None

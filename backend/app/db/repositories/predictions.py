@@ -32,6 +32,30 @@ async def distinct_recent_stock_ids(con, user_id, since_iso) -> list[int]:
     return [r["stock_id"] for r in await cur.fetchall()]
 
 
+async def find_due(con, now_iso: str, limit: int = 200) -> list[dict]:
+    """Matured, ungraded predictions (window closed, not yet checked), oldest window first."""
+    cur = await con.execute(
+        "SELECT id, stock_id, timeframe, direction, window_closes_at, created_at, reasoning_json "
+        "FROM predictions WHERE checked_at IS NULL AND window_closes_at <= ? "
+        "ORDER BY window_closes_at LIMIT ?", (now_iso, limit))
+    return [dict(r) for r in await cur.fetchall()]
+
+
+async def record_outcome(con, *, prediction_id, actual_direction, actual_price_change_percent,
+                         marked_correct, exit_price, high_impact_event_overlap, checked_at_iso) -> None:
+    """Atomic: insert the (unique) prediction_outcomes row AND mark the prediction checked, one txn.
+    Raises sqlite3.IntegrityError if the prediction is already graded (UNIQUE prediction_id)."""
+    await con.execute(
+        "INSERT INTO prediction_outcomes (prediction_id, actual_direction, "
+        "actual_price_change_percent, marked_correct, exit_price, high_impact_event_overlap) "
+        "VALUES (?,?,?,?,?,?)",
+        (prediction_id, actual_direction, actual_price_change_percent, marked_correct,
+         exit_price, high_impact_event_overlap))
+    await con.execute("UPDATE predictions SET checked_at=? WHERE id=?",
+                      (checked_at_iso, prediction_id))
+    await con.commit()
+
+
 async def list_user_history(con, *, user_id, stock_id, timeframe=None, status=None,
                             limit=20, offset=0):
     where = ["p.user_id=?", "p.stock_id=?"]
