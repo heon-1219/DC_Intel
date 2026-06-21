@@ -7,9 +7,11 @@ from fastapi.responses import JSONResponse
 
 from app.auth.deps import get_current_user_optional
 from app.cache import redis as cache_redis
+from app.cache.redis import make_envelope
 from app.calendar.affects import compute_event_affects
 from app.calendar.registry import load_registry, load_sectors
 from app.config import get_settings
+from app.core import errors
 from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
 from app.db.repositories import economic_events as repo
@@ -32,8 +34,7 @@ _STALE_AFTER_H = 48
 
 
 def _err(status, code, en, ko, rid):
-    return JSONResponse(status_code=status, content={"error": {
-        "code": code, "message_en": en, "message_ko": ko, "request_id": rid}})
+    return errors.error_json(status, code, en, ko, rid)
 
 
 def _iso(dt: datetime) -> str:
@@ -125,16 +126,15 @@ async def economic_calendar(request: Request):
         synced = datetime.fromisoformat(last_synced.replace("Z", "+00:00"))
         data_stale = (now - synced) > timedelta(hours=_STALE_AFTER_H)
 
-    return JSONResponse(content={
-        "data": {
+    return JSONResponse(content=make_envelope(
+        {
             "server_time_utc": _iso(now),
             "range": {"from_utc": from_utc, "to_utc": to_utc},
             "last_synced_at_utc": last_synced, "data_stale": data_stale,
             "events": events,
         },
-        "meta": {"source": "composite", "cache": "hit" if cached else "miss",
-                 "request_id": rid},
-    })
+        source="composite", data_as_of=last_synced or _iso(now), is_stale=data_stale,
+        cache="hit" if cached else "miss", request_id=rid))
 
 
 async def _read_anomalies(redis) -> list[dict]:
@@ -197,7 +197,6 @@ async def market_intel(request: Request):
         pinned = {cid for a in anomalies for cid in a.get("top_cluster_ids", [])}
         clusters = [c for c in clusters if c["cluster_id"] in pinned]
 
-    return JSONResponse(content={
-        "data": {"as_of": _iso(now), "lang": lang, "anomalies": anomalies, "clusters": clusters},
-        "meta": {"source": "intel", "request_id": rid},
-    })
+    return JSONResponse(content=make_envelope(
+        {"as_of": _iso(now), "lang": lang, "anomalies": anomalies, "clusters": clusters},
+        source="composite", data_as_of=_iso(now), is_stale=False, cache="miss", request_id=rid))

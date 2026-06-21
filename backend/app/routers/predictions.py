@@ -15,6 +15,7 @@ from app.auth.deps import get_current_user
 from app.cache import redis as cache_redis
 from app.cache.redis import make_envelope
 from app.config import get_settings
+from app.core import errors
 from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
 from app.db.repositories import predictions as prepo
@@ -29,9 +30,7 @@ router = APIRouter()
 
 
 def _err(status, code, en, ko, rid, details=None):
-    return JSONResponse(status_code=status, content={"error": {
-        "code": code, "message_en": en, "message_ko": ko,
-        "details": details, "request_id": rid}})
+    return errors.error_json(status, code, en, ko, rid, details)
 
 
 def _iso(dt: datetime) -> str:

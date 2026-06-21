@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 
 from app.cache import redis as cache_redis
+from app.core import errors
 from app.calendar.providers.finnhub_calendar_provider import FinnhubCalendarProvider
 from app.calendar.providers.fred_provider import FredProvider
 from app.calendar.providers.investing_provider import InvestingProvider
@@ -133,6 +135,8 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(title="DC Intel API", version="0.1.0", lifespan=lifespan)
     app.add_exception_handler(AuthError, auth_error_handler)
+    app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)
+    app.add_exception_handler(Exception, errors.unhandled_exception_handler)
     app.include_router(health.router)
     app.include_router(stocks.router)
     app.include_router(dashboard.router)

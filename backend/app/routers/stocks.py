@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.cache import redis as cache_redis
 from app.cache.redis import make_envelope
 from app.config import get_settings
+from app.core import errors
 from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
 from app.db.repositories import accuracy as accrepo
@@ -22,8 +23,7 @@ router = APIRouter()
 
 
 def _err(status: int, code: str, en: str, ko: str, request_id: str) -> JSONResponse:
-    return JSONResponse(status_code=status, content={"error": {
-        "code": code, "message_en": en, "message_ko": ko, "request_id": request_id}})
+    return errors.error_json(status, code, en, ko, request_id)
 
 
 def _iso(now: datetime) -> str:

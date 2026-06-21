@@ -16,6 +16,7 @@ from app.auth.security import encode_token, hash_password, verify_password
 from app.cache import redis as cache_redis
 from app.cache.redis import make_envelope
 from app.config import get_settings
+from app.core import errors
 from app.db.connection import connect
 from app.db.repositories import users as urepo
 
@@ -27,9 +28,7 @@ def _iso(dt: datetime) -> str:
 
 
 def _err(status, code, en, ko, rid, details=None):
-    return JSONResponse(status_code=status, content={"error": {
-        "code": code, "message_en": en, "message_ko": ko,
-        "details": details, "request_id": rid}})
+    return errors.error_json(status, code, en, ko, rid, details)
 
 
 @functools.lru_cache
