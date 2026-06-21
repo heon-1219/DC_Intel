@@ -1,0 +1,66 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--type-caption);
+  padding: 2px var(--sp-2);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.stale {
+  composes: chip;
+  color: var(--stale);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+.closed {
+  composes: chip;
+  color: var(--neutral-text);
+  background: var(--neutral-bg);
+  border: 1px solid var(--border);
+}
+.fresh {
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}
+.error {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--error);
+  font-size: var(--type-body);
+  text-align: center;
+}
+.error:hover {
+  background: var(--bear-bg);
+}
+.disclaimer {
+  margin-top: var(--sp-5);
+  padding: var(--sp-4);
+  font-size: var(--type-caption);
+  color: var(--text-3);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+.countdown {
+  font-variant-numeric: tabular-nums;
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: var(--sp-1);
+}
+.dotOpen {
+  composes: dot;
+  background: var(--bull);
+}
+.dotClosed {
+  composes: dot;
+  background: var(--neutral);
+}
