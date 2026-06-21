@@ -77,5 +77,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Catch-all -> 500 INTERNAL. Body carries ONLY the request_id (ties to the server log); never a
-    stack trace or the exception message (§2.4 / §10.3 redaction)."""
-    return err("INTERNAL", request_id(request))
+    stack trace or the exception message (§2.4 / §10.3 redaction). Starlette's ServerErrorMiddleware
+    sends this response via the raw `send` WITHOUT re-entering RequestIdMiddleware, so the
+    X-Request-ID header must be stamped here too (else the 500 — the response that most needs log
+    correlation — would omit it, §10.1)."""
+    rid = request_id(request)
+    return err("INTERNAL", rid, headers={"X-Request-ID": rid})

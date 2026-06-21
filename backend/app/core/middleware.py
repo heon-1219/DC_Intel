@@ -69,15 +69,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         ip = rl.client_ip(request)
         ok_ip, remaining, retry_ip = await rl.hit(
             redis, "ip", ip, limit=GLOBAL_IP_PER_MIN, window_sec=WINDOW_SEC)
-        ok_user, retry_user = True, 0
+        ok_user, user_remaining, retry_user = True, None, 0
         sub = _bearer_sub(request)
         if sub is not None:
-            ok_user, _, retry_user = await rl.hit(
+            ok_user, user_remaining, retry_user = await rl.hit(
                 redis, "user", sub, limit=GLOBAL_USER_PER_MIN, window_sec=WINDOW_SEC)
         if not ok_ip or not ok_user:
             limit = GLOBAL_IP_PER_MIN if not ok_ip else GLOBAL_USER_PER_MIN
             return rl.rate_limited(rid, max(retry_ip, retry_user), limit)
         response = await call_next(request)
-        response.headers["X-RateLimit-Limit"] = str(GLOBAL_IP_PER_MIN)
-        response.headers["X-RateLimit-Remaining"] = str(max(remaining, 0))
+        # Advertise the BINDING constraint (smallest remaining) so the success-path headers agree
+        # with the 429 path's limit selection — for an authenticated user the per-user limit may bind.
+        if user_remaining is not None and user_remaining < remaining:
+            eff_limit, eff_remaining = GLOBAL_USER_PER_MIN, user_remaining
+        else:
+            eff_limit, eff_remaining = GLOBAL_IP_PER_MIN, remaining
+        response.headers["X-RateLimit-Limit"] = str(eff_limit)
+        response.headers["X-RateLimit-Remaining"] = str(max(eff_remaining, 0))
         return response

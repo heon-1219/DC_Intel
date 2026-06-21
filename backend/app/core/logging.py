@@ -23,16 +23,31 @@ def _is_secret_key(key: str) -> bool:
     return any(s in lk for s in _SECRET_SUBSTRINGS)
 
 
+def _scrub(value, mask_email: bool):
+    """Recursively redact secret keys + mask emails inside nested dict/list values, returning NEW
+    containers (never mutating caller-owned nested objects)."""
+    if isinstance(value, dict):
+        return {k: ("***" if _is_secret_key(k) else _scrub(v, mask_email)) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(_scrub(v, mask_email) for v in value)
+    if mask_email and isinstance(value, str) and _EMAIL_RE.search(value):
+        return _EMAIL_RE.sub("***@***", value)
+    return value
+
+
 def redact(logger, method_name, event_dict):
-    """Strip secrets by key, then mask emails unless this is an auth.* event (§10.3)."""
-    for k in list(event_dict.keys()):
+    """Strip secrets by key and mask emails (unless an auth.* event), recursing into nested
+    structured fields so a secret/email buried in a dict or list value is redacted too (§10.3)."""
+    mask_email = event_dict.get("event") not in _AUTH_EVENTS
+    out = {}
+    for k, v in event_dict.items():
         if _is_secret_key(k):
-            event_dict[k] = "***"
-    if event_dict.get("event") not in _AUTH_EVENTS:
-        for k, v in list(event_dict.items()):
-            if k not in _EMAIL_OK_KEYS and isinstance(v, str) and _EMAIL_RE.search(v):
-                event_dict[k] = _EMAIL_RE.sub("***@***", v)
-    return event_dict
+            out[k] = "***"
+        elif k in _EMAIL_OK_KEYS:
+            out[k] = v
+        else:
+            out[k] = _scrub(v, mask_email)
+    return out
 
 
 _configured = False

@@ -74,11 +74,14 @@ async def search_listings(con, q: str, *, limit: int) -> list[dict]:
     (case-insensitive), excluding index rows. Returns up to `limit` company groups in match order,
     each carrying ALL its active listings with is_primary + kind derived (NO prices — the /search
     handler merges the live px:quote/px:fx overlay per request)."""
-    prefix, sub = q + "%", "%" + q + "%"
+    # Escape LIKE meta-characters so a literal % or _ in the query is matched literally, not as a
+    # wildcard (else q='%' would match the whole universe). Escape backslash FIRST.
+    esc = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    prefix, sub = esc + "%", "%" + esc + "%"
     cur = await con.execute(
         f"SELECT {_SEARCH_COLS} FROM stocks WHERE is_active = 1 AND security_type != 'index' "
-        "AND (LOWER(symbol) LIKE ? OR LOWER(company_name) LIKE ? OR LOWER(company_name_ko) LIKE ?) "
-        "ORDER BY symbol",
+        "AND (LOWER(symbol) LIKE ? ESCAPE '\\' OR LOWER(company_name) LIKE ? ESCAPE '\\' "
+        "OR LOWER(company_name_ko) LIKE ? ESCAPE '\\') ORDER BY symbol",
         (prefix, sub, sub),
     )
     order, seen = [], set()

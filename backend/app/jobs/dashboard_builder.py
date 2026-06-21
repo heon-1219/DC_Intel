@@ -78,8 +78,12 @@ async def build_trending(db: str, redis, bars, *, now: datetime | None = None) -
         async with connect(db) as con:
             for rid in needed:
                 s = await accrepo.accuracy_stats(con, rid, window="all", now_iso=_iso(now))
-                wr = None if s.get("low_sample") else s["directional"]["win_rate_pct"]
-                win[rid] = (wr, s["graded_total"])
+                # win_rate_pct is DIRECTIONAL (neutral counts as a loss), so n_closed must be the
+                # directional denominator too — pairing it with graded_total (incl. neutrals) would
+                # mislabel the badge. Gate the rate on that same directional count (>= MIN_SAMPLE).
+                dp = s["directional"]["predictions"]
+                wr = s["directional"]["win_rate_pct"] if dp >= accrepo.MIN_SAMPLE else None
+                win[rid] = (wr, dp)
 
     def _card(cp, ref, c):
         wr, nc = win.get(ref.id, (None, 0))
