@@ -1,0 +1,119 @@
+/* Design tokens — verbatim from ui-ux.md §4. Light theme only in v1 (dark = v1.1 patch). */
+:root {
+  /* Direction semantics — fixed platform-wide (§4.1) */
+  --bull: #16a34a;
+  --bull-text: #15803d;
+  --bull-bg: #f0fdf4;
+  --bear: #dc2626;
+  --bear-text: #b91c1c;
+  --bear-bg: #fef2f2;
+  --neutral: #6b7280;
+  --neutral-text: #4b5563;
+  --neutral-bg: #f3f4f6;
+
+  /* Reserved by market-intel badge contract — never green/red */
+  --confirmed: #2563eb;
+  --unconfirmed: #d97706;
+
+  /* Economic-calendar impact (always dots + label) */
+  --impact-high: #ea580c;
+  --impact-med: #ca8a04;
+  --impact-low: #9ca3af;
+
+  /* Surfaces & text */
+  --bg: #ffffff;
+  --bg-subtle: #f9fafb;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-2: #4b5563;
+  --text-3: #9ca3af;
+  --focus-ring: #2563eb;
+  --stale: #d97706;
+  --error: #b91c1c;
+  --skeleton: #e5e7eb;
+
+  /* Typography (§4.2) */
+  --font-sans: "Pretendard Variable", Pretendard, Inter, "Noto Sans KR", -apple-system,
+    "Segoe UI", sans-serif;
+  --type-display: 44px;
+  --type-h1: 24px;
+  --type-h2: 19px;
+  --type-metric: 20px;
+  --type-body: 15px;
+  --type-caption: 12.5px;
+  --type-micro: 11px;
+
+  /* Spacing scale 4/8/12/16/24/32/48 (§4.3) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --radius: 12px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --type-display: 64px;
+    --type-h1: 28px;
+    --type-h2: 22px;
+    --type-metric: 24px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--type-body);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg-subtle);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* All numerals are tabular so polling updates never cause layout shimmy (P9). */
+body,
+input,
+button {
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+/* Visible focus ring on every interactive element (§9). */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
