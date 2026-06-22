@@ -60,11 +60,19 @@ def largest_remainder_round(values: list[float], total: int = 100) -> list[int]:
     return floors
 
 
+# group -> UI evidence kind (ui-ux §7.4.4: 📈 technical / 💬 sentiment / 📅 calendar).
+_GROUP_KIND = {
+    "rsi": "technical", "ema": "technical", "macd": "technical", "bollinger": "technical",
+    "volume": "technical", "cross_market": "technical",
+    "sentiment": "sentiment", "econ_event": "calendar",
+}
+
+
 def _render(group: str, direction: str, pct: int, rank: int) -> dict:
     tpl = EVIDENCE_TEMPLATES[(group, direction)]
     return {
-        "rank": rank, "group": group, "contribution_pct": pct,
-        "template_key": f"{group}.{direction}",
+        "rank": rank, "group": group, "kind": _GROUP_KIND.get(group, "technical"),
+        "contribution_pct": pct, "template_key": f"{group}.{direction}",
         "text_en": f"{tpl['en']} ({pct}%)", "text_ko": f"{tpl['ko']} ({pct}%)",
     }
 

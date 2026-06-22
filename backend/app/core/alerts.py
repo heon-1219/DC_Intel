@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from app.config import get_settings
 from app.core import logging as applog
+from app.core.logging import redact
 
 _LOG_METHOD = {"ERROR": "error", "WARN": "warning", "WARNING": "warning", "INFO": "info"}
 
@@ -22,13 +23,16 @@ def emit_alert(level: str, event: str, message: str, **fields) -> dict:
         "message": message,
         **fields,
     }
+    # Redact secrets/emails before they hit the file or webhook (§10.3) — the console path below is
+    # scrubbed by structlog's redact processor, but these sinks bypass it.
+    safe = redact(None, "info", dict(record))
     try:
         path = s.alert_log_path
         parent = os.path.dirname(path)
         if parent:
             os.makedirs(parent, exist_ok=True)
         with open(path, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+            fh.write(json.dumps(safe, ensure_ascii=False) + "\n")
     except Exception:  # noqa: BLE001 - alerting never crashes the caller
         pass
 
@@ -36,7 +40,7 @@ def emit_alert(level: str, event: str, message: str, **fields) -> dict:
     getattr(log, _LOG_METHOD.get(lvl, "warning"))(f"alert.{event}", message=message, **fields)
 
     if s.alert_webhook_url:
-        _post_webhook(s.alert_webhook_url, record)
+        _post_webhook(s.alert_webhook_url, safe)
     return record
 
 

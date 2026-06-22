@@ -7,6 +7,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:-dev-only-change-me-0000000000000000}
       - DATABASE_URL=sqlite+aiosqlite:////data/dcintel.db
       - REDIS_URL=redis://redis:6379/0
+      - MODEL_DIR=/data/models                 # served artifacts live in the volume (seeded on boot)
       - TRUST_PROXY=true                       # reachable only via Caddy on the compose network
       - ALERT_LOG_PATH=/data/logs/alerts.log   # persisted in the dbdata volume
       - BACKUP_DIR=/data/backups

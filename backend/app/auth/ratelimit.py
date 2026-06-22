@@ -19,7 +19,10 @@ def client_ip(request) -> str:
     if s.trust_proxy:
         xff = request.headers.get("x-forwarded-for")
         if xff:
-            return xff.split(",")[0].strip()
+            # Take the RIGHT-MOST hop — the one our single trusted front door (Caddy) appended.
+            # The left tokens are client-supplied and spoofable, so trusting [0] would let an
+            # attacker forge their IP and dodge the per-IP limit.
+            return xff.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 

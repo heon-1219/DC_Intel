@@ -37,11 +37,14 @@ _S82 = {
 def test_build_evidence_matches_s82_oracle():
     ev = build_evidence(_S82, FEATURE_GROUP, missing=set(), direction="up")
     assert ev == [
-        {"rank": 1, "group": "sentiment", "contribution_pct": 43, "template_key": "sentiment.up",
+        {"rank": 1, "group": "sentiment", "kind": "sentiment", "contribution_pct": 43,
+         "template_key": "sentiment.up",
          "text_en": "Positive sentiment surge (43%)", "text_ko": "긍정적 여론 급증 (43%)"},
-        {"rank": 2, "group": "rsi", "contribution_pct": 38, "template_key": "rsi.up",
+        {"rank": 2, "group": "rsi", "kind": "technical", "contribution_pct": 38,
+         "template_key": "rsi.up",
          "text_en": "RSI bullish signal (38%)", "text_ko": "RSI 상승 신호 (38%)"},
-        {"rank": 3, "group": "ema", "contribution_pct": 19, "template_key": "ema.up",
+        {"rank": 3, "group": "ema", "kind": "technical", "contribution_pct": 19,
+         "template_key": "ema.up",
          "text_en": "Bullish EMA crossover (19%)", "text_ko": "EMA 상승 교차 신호 (19%)"},
     ]
 
