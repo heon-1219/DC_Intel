@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { api } from "../../api/client";
-import { formatMoney, localTime, pctSign, signedPct } from "../../lib/format";
+import { formatMoney, intNumber, localTime, pctSign, signedPct } from "../../lib/format";
 import { pollOptions } from "../../hooks/usePolling";
 import { useT } from "../../hooks/useT";
-import { StaleChip, StatusDot } from "../common/Chips";
+import { FreshCaption, StaleChip, StatusDot } from "../common/Chips";
 import ErrorCard from "../common/ErrorCard";
 import Skeleton from "../common/Skeleton";
 import p from "./predict.module.css";
@@ -34,7 +34,12 @@ export default function CrossMarketTable({ listing }: { listing: string }) {
         </p>
       ) : (
         <>
-          {data?.meta.is_stale && <StaleChip asOf={data.meta.data_as_of} />}
+          {data &&
+            (data.meta.is_stale ? (
+              <StaleChip asOf={data.meta.data_as_of} />
+            ) : (
+              <FreshCaption asOf={data.meta.data_as_of} />
+            ))}
           <table className={p.xmktTable}>
             <thead>
               <tr>
@@ -50,19 +55,49 @@ export default function CrossMarketTable({ listing }: { listing: string }) {
                 const sign = pctSign(l.diff_pct_vs_base);
                 const cls = sign === "bull" ? p.bullText : sign === "bear" ? p.bearText : p.neutralText;
                 const current = l.instrument === listing;
+                const diffText =
+                  l.diff_pct_vs_base == null
+                    ? "—"
+                    : sign === "neutral"
+                      ? t("diff.zero")
+                      : signedPct(l.diff_pct_vs_base);
+                const fxRate = data?.data.fx_rates.USDKRW;
+                const go = () => {
+                  if (!current) navigate(`/stocks/${l.instrument}`);
+                };
                 return (
                   <tr
                     key={l.instrument}
                     className={current ? p.xmktRowActive : p.xmktRow}
-                    onClick={() => !current && navigate(`/stocks/${l.instrument}`)}
+                    role={current ? undefined : "button"}
+                    tabIndex={current ? undefined : 0}
+                    onClick={go}
+                    onKeyDown={(e) => {
+                      if (!current && (e.key === "Enter" || e.key === " ")) {
+                        e.preventDefault();
+                        go();
+                      }
+                    }}
                   >
-                    <td>{l.instrument}</td>
-                    <td>{l.price != null ? formatMoney(l.price, l.currency, lang) : "—"}</td>
-                    <td className={cls}>
-                      {l.diff_pct_vs_base != null ? signedPct(l.diff_pct_vs_base) : "—"}
+                    <td data-label={t("xmkt.col.market")}>{l.instrument}</td>
+                    <td data-label={t("xmkt.col.price")}>
+                      {l.price != null ? formatMoney(l.price, l.currency, lang) : "—"}
                     </td>
-                    <td>{l.data_as_of ? localTime(l.data_as_of, lang) : "—"}</td>
-                    <td>
+                    <td
+                      data-label={t("xmkt.col.vsPrimary")}
+                      className={cls}
+                      title={
+                        fxRate != null && l.data_as_of
+                          ? t("diff.tooltip.fx", { rate: intNumber(fxRate, lang), time: localTime(l.data_as_of, lang) })
+                          : undefined
+                      }
+                    >
+                      {diffText}
+                    </td>
+                    <td data-label={t("xmkt.col.updated")}>
+                      {l.data_as_of ? localTime(l.data_as_of, lang) : "—"}
+                    </td>
+                    <td data-label={t("xmkt.col.status")}>
                       <StatusDot open={l.market_state === "open"} />
                     </td>
                   </tr>

@@ -11,9 +11,11 @@ import DirectionIndicator from "../components/predict/DirectionIndicator";
 import EvidenceList from "../components/predict/EvidenceList";
 import PriceHeader from "../components/predict/PriceHeader";
 import TimeframeSelector from "../components/predict/TimeframeSelector";
+import { StaleChip } from "../components/common/Chips";
 import Disclaimer from "../components/common/Disclaimer";
 import ErrorCard from "../components/common/ErrorCard";
 import Skeleton from "../components/common/Skeleton";
+import cm from "../components/common/common.module.css";
 import HistoryTab from "../components/history/HistoryTab";
 import IntelFeed from "../components/intel/IntelFeed";
 import { useT } from "../hooks/useT";
@@ -62,14 +64,15 @@ function PredictionTab({ listing }: { listing: string }) {
           ) : error || !data ? (
             <ErrorCard onRetry={() => refetch()} />
           ) : (
-            <>
+            <div className={data.meta.is_stale ? cm.staleContent : undefined}>
+              {data.meta.is_stale && <StaleChip asOf={data.meta.data_as_of} />}
               <DirectionIndicator
                 direction={data.data.direction}
                 timeframe={tf}
                 windowClosesAt={data.data.window_closes_at}
               />
               <ConfidenceScore confidence={data.data.confidence} direction={data.data.direction} />
-            </>
+            </div>
           )}
           <TimeframeSelector value={tf} onChange={setTimeframe} />
           <AccuracyBadge listing={listing} />
@@ -77,11 +80,11 @@ function PredictionTab({ listing }: { listing: string }) {
         <div>
           <section className={p.section}>
             <h3 className={p.sectionTitle}>{t("predict.why")}</h3>
-            {data ? (
-              <EvidenceList items={data.data.evidence} lang={lang} />
-            ) : (
+            {isLoading ? (
               <Skeleton count={3} height={28} />
-            )}
+            ) : data ? (
+              <EvidenceList items={data.data.evidence} lang={lang} />
+            ) : null}
           </section>
           <CrossMarketTable listing={listing} />
           <IntelFeed stock={listing} />

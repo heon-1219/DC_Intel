@@ -6,9 +6,9 @@ import { api } from "../../api/client";
 import type { Lang } from "../../api/types";
 import { pollOptions } from "../../hooks/usePolling";
 import { useT } from "../../hooks/useT";
-import { StaleChip } from "../common/Chips";
+import { FreshCaption, StaleChip } from "../common/Chips";
 import ErrorCard from "../common/ErrorCard";
-import Skeleton from "../common/Skeleton";
+import cm from "../common/common.module.css";
 import d from "../../pages/dashboard.module.css";
 
 type Region = "kr" | "us";
@@ -56,7 +56,7 @@ export default function TrendingCarousel() {
     <section className={d.widget}>
       <div className={d.widgetHead}>
         <h2 className={d.widgetTitle}>{t("trending.title")}</h2>
-        <div className={d.regionToggle} role="group" aria-label="Region">
+        <div className={d.regionToggle} role="group" aria-label={t("a11y.region")}>
           <button
             className={region === "kr" ? d.regionBtnActive : d.regionBtn}
             aria-pressed={region === "kr"}
@@ -73,9 +73,18 @@ export default function TrendingCarousel() {
           </button>
         </div>
       </div>
-      {data?.meta.is_stale && <StaleChip asOf={data.meta.data_as_of} />}
+      {data &&
+        (data.meta.is_stale ? (
+          <StaleChip asOf={data.meta.data_as_of} />
+        ) : (
+          <FreshCaption asOf={data.meta.data_as_of} />
+        ))}
       {isLoading ? (
-        <Skeleton count={1} height={148} />
+        <div className={d.carousel}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className={`${d.tCard} ${cm.skeleton}`} style={{ height: 148 }} />
+          ))}
+        </div>
       ) : error && !data ? (
         <ErrorCard onRetry={() => refetch()} />
       ) : cards.length === 0 ? (

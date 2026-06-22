@@ -266,3 +266,41 @@
   color: var(--text-3);
   margin-top: var(--sp-2);
 }
+.confMidLabel {
+  max-width: 320px;
+  margin: 2px auto 0;
+  text-align: center;
+  font-size: var(--type-micro);
+  color: var(--text-3);
+}
+/* Cross-market: stacked cards on xs/sm, the 5-column table from md up (§4.4 / §7.4.6). */
+@media (max-width: 767px) {
+  .xmktTable,
+  .xmktTable tbody,
+  .xmktTable tr,
+  .xmktTable td {
+    display: block;
+    width: 100%;
+  }
+  .xmktTable thead {
+    display: none;
+  }
+  .xmktTable tr {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .xmktTable td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    border: none;
+    padding: 2px 0;
+  }
+  .xmktTable td::before {
+    content: attr(data-label);
+    color: var(--text-2);
+    font-size: var(--type-caption);
+  }
+}

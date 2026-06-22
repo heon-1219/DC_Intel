@@ -30,7 +30,16 @@ export default function IntelCard({ cluster }: { cluster: IntelCluster }) {
     <article
       className={clickable ? s.clickable : s.card}
       onClick={clickable ? go : undefined}
-      onKeyDown={clickable ? (e) => e.key === "Enter" && go() : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                go();
+              }
+            }
+          : undefined
+      }
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
     >

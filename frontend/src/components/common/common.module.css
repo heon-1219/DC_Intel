@@ -84,3 +84,21 @@
     animation: none;
   }
 }
+/* §3.2: stale content stays visible but desaturated. */
+.staleContent {
+  opacity: 0.85;
+}
+.boundary {
+  max-width: 420px;
+  margin: 15vh auto;
+  text-align: center;
+  padding: var(--sp-5);
+}
+.boundaryBtn {
+  min-height: 44px;
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-weight: 600;
+}

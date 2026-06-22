@@ -6,7 +6,7 @@ import type { CalendarEvent } from "../../api/types";
 import { localTime } from "../../lib/format";
 import { pollOptions } from "../../hooks/usePolling";
 import { useT } from "../../hooks/useT";
-import { StaleChip } from "../common/Chips";
+import { FreshCaption, StaleChip } from "../common/Chips";
 import CountdownLabel from "../common/CountdownLabel";
 import ErrorCard from "../common/ErrorCard";
 import Skeleton from "../common/Skeleton";
@@ -22,13 +22,15 @@ function Row({ ev }: { ev: CalendarEvent }) {
   const title = lang === "ko" ? ev.title_ko : ev.title_en;
   return (
     <div className={d.calRow}>
-      <span className={`${d.impactDots} ${IMPACT_CLASS[ev.impact_level]}`} title={t(IMPACT_KEY[ev.impact_level])}>
+      <span className={`${d.impactDots} ${IMPACT_CLASS[ev.impact_level]}`} aria-hidden="true">
         {DOTS[ev.impact_level]}
       </span>
       <div className={d.calBody}>
         <div className={d.calName}>{title}</div>
         <div className={d.calMeta}>
-          {ev.country} · {localTime(ev.scheduled_at_utc, lang)} · <CountdownLabel targetUtc={ev.scheduled_at_utc} />
+          <span className={IMPACT_CLASS[ev.impact_level]}>{t(IMPACT_KEY[ev.impact_level])}</span> ·{" "}
+          {ev.country} · {localTime(ev.scheduled_at_utc, lang)} ·{" "}
+          <CountdownLabel targetUtc={ev.scheduled_at_utc} />
         </div>
       </div>
     </div>
@@ -57,7 +59,12 @@ export default function EconCalendar() {
     <section className={d.widget}>
       <div className={d.widgetHead}>
         <h2 className={d.widgetTitle}>{t("calendar.title")}</h2>
-        {data?.data.data_stale && <StaleChip asOf={data.meta.data_as_of} />}
+        {data &&
+          (data.data.data_stale ? (
+            <StaleChip asOf={data.meta.data_as_of} />
+          ) : (
+            <FreshCaption asOf={data.meta.data_as_of} />
+          ))}
       </div>
       {isLoading ? (
         <Skeleton count={5} height={44} />

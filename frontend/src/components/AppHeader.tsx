@@ -40,7 +40,7 @@ export default function AppHeader() {
         🔍 {t("search.placeholder")}
       </button>
 
-      <div className={s.langToggle} role="group" aria-label="Language">
+      <div className={s.langToggle} role="group" aria-label={t("a11y.language")}>
         <button
           type="button"
           className={lang === "ko" ? s.langBtnActive : s.langBtn}

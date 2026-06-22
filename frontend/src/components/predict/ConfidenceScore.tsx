@@ -22,8 +22,9 @@ export default function ConfidenceScore({
           className={p.confFill}
           style={{ width: `${Math.max(0, Math.min(100, confidence))}%`, background: DIR_BG[direction] }}
         />
-        <div className={p.confMid} title={t("confidence.coinflip")} />
+        <div className={p.confMid} />
       </div>
+      <div className={p.confMidLabel}>{t("confidence.coinflip")}</div>
     </div>
   );
 }

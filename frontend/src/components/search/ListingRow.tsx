@@ -39,7 +39,7 @@ export default function ListingRow({ listing, lang, active, id, onSelect }: Prop
       {listing.is_primary ? (
         <span className={s.primaryTag}>{t("search.primary")}</span>
       ) : diff != null ? (
-        <span className={`${s.diff} ${diffCls}`}>{signedPct(diff)}</span>
+        <span className={`${s.diff} ${diffCls}`}>{sign === "neutral" ? t("diff.zero") : signedPct(diff)}</span>
       ) : (
         <span className={`${s.diff} ${s.neutral}`}>—</span>
       )}

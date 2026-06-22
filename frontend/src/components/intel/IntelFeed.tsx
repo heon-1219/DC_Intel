@@ -5,7 +5,7 @@ import IntelCard from "./IntelCard";
 import { api } from "../../api/client";
 import ErrorCard from "../common/ErrorCard";
 import Skeleton from "../common/Skeleton";
-import { StaleChip } from "../common/Chips";
+import { FreshCaption, StaleChip } from "../common/Chips";
 import { pollOptions } from "../../hooks/usePolling";
 import { useT } from "../../hooks/useT";
 import d from "../../pages/dashboard.module.css";
@@ -23,7 +23,12 @@ export default function IntelFeed({ stock }: { stock?: string }) {
     <section className={d.widget}>
       <div className={d.widgetHead}>
         <h2 className={d.widgetTitle}>{t("intel.title")}</h2>
-        {data?.meta.is_stale && <StaleChip asOf={data.meta.data_as_of} />}
+        {data &&
+          (data.meta.is_stale ? (
+            <StaleChip asOf={data.meta.data_as_of} />
+          ) : (
+            <FreshCaption asOf={data.meta.data_as_of} />
+          ))}
       </div>
       {isLoading ? (
         <Skeleton count={4} height={120} />
@@ -33,7 +38,7 @@ export default function IntelFeed({ stock }: { stock?: string }) {
         <p className={d.empty}>{t("state.empty.intel")}</p>
       ) : (
         <>
-          <AnomalyBanner anomalies={data.data.anomalies} lang={lang} />
+          <AnomalyBanner anomalies={data.data.anomalies} />
           {data.data.clusters.map((c) => (
             <IntelCard key={c.cluster_id} cluster={c} />
           ))}

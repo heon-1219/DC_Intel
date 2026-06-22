@@ -5,10 +5,10 @@ import type { IndexTile, Lang } from "../../api/types";
 import { intNumber, pctArrow, pctSign, signedPct } from "../../lib/format";
 import { pollOptions } from "../../hooks/usePolling";
 import { useT } from "../../hooks/useT";
-import { StaleChip, StatusDot } from "../common/Chips";
+import { FreshCaption, StaleChip, StatusDot } from "../common/Chips";
 import ErrorCard from "../common/ErrorCard";
-import Skeleton from "../common/Skeleton";
 import Sparkline from "../common/Sparkline";
+import cm from "../common/common.module.css";
 import d from "../../pages/dashboard.module.css";
 
 function Tile({ ix, lang }: { ix: IndexTile; lang: Lang }) {
@@ -42,10 +42,19 @@ export default function IndexStrip() {
     <section className={d.widget}>
       <div className={d.widgetHead}>
         <h2 className={d.widgetTitle}>{t("indexes.title")}</h2>
-        {data?.meta.is_stale && <StaleChip asOf={data.meta.data_as_of} />}
+        {data &&
+          (data.meta.is_stale ? (
+            <StaleChip asOf={data.meta.data_as_of} />
+          ) : (
+            <FreshCaption asOf={data.meta.data_as_of} />
+          ))}
       </div>
       {isLoading ? (
-        <Skeleton count={1} height={110} />
+        <div className={d.strip}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className={`${d.indexTile} ${cm.skeleton}`} style={{ height: 110 }} />
+          ))}
+        </div>
       ) : error && !data ? (
         <ErrorCard onRetry={() => refetch()} />
       ) : (

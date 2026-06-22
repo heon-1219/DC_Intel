@@ -209,11 +209,12 @@ export interface IntelCluster {
   stock: IntelStock | null;
 }
 export interface IntelAnomaly {
-  name?: string;
-  signed_pct?: number;
-  headline_en?: string;
-  headline_ko?: string;
-  top_cluster_ids?: string[];
+  // Shape written by backend/app/intel/anomaly.py.
+  direction?: "up" | "down";
+  change_pct?: number;
+  window_minutes?: number;
+  detected_at?: string;
+  stock?: { symbol: string; exchange: string };
   [k: string]: unknown;
 }
 export interface MarketIntelData {
