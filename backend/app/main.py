@@ -8,7 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from app.cache import redis as cache_redis
 from app.core import errors
 from app.core import logging as applog
-from app.core.middleware import RateLimitMiddleware, RequestIdMiddleware
+from app.core.middleware import MetricsMiddleware, RateLimitMiddleware, RequestIdMiddleware
 from app.calendar.providers.finnhub_calendar_provider import FinnhubCalendarProvider
 from app.calendar.providers.fred_provider import FredProvider
 from app.calendar.providers.investing_provider import InvestingProvider
@@ -28,6 +28,8 @@ from app.sentiment.fetchers.newsapi import NewsApiFetcher
 from app.jobs.calendar_sync import sync_calendar
 from app.jobs.dashboard_builder import build_dashboard_blobs
 from app.jobs.db_backup import run_db_backup
+from app.jobs.metrics_rollup import run_metrics_rollup
+from app.jobs.model_retrain import run_model_retrain
 from app.jobs.win_rate_monitor import run_win_rate_monitor
 from app.jobs.event_study import econ_event_study
 from app.jobs.indicator_calculator import recompute_indicators
@@ -135,6 +137,12 @@ async def lifespan(app: FastAPI):
     async def _backup():
         await run_db_backup(settings.sqlite_path, settings.backup_dir)
 
+    async def _metrics():
+        await run_metrics_rollup()
+
+    async def _retrain():
+        await run_model_retrain(settings.sqlite_path, settings.model_dir)
+
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
         "heartbeat": _hb, "recompute_indicators": _ind, "build_dashboard": _dash,
@@ -143,7 +151,8 @@ async def lifespan(app: FastAPI):
         "aggregate_sentiment": _agg_sentiment, "intel_anomaly_scan": _anomaly,
         "intel_confirmation_match": _confirm, "outcome_checker": _outcome,
         "intel_author_stats": _author_stats, "intel_retention": _retention,
-        "win_rate_monitor": _winrate, "db_backup": _backup})
+        "win_rate_monitor": _winrate, "db_backup": _backup,
+        "metrics_rollup": _metrics, "model_retrain": _retrain})
     try:
         yield
     finally:
@@ -159,6 +168,7 @@ def create_app() -> FastAPI:
     # limiter runs and is present on the 429 body + X-Request-ID header.
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(MetricsMiddleware)  # outermost: measures total request time incl. other mw
     app.add_exception_handler(AuthError, auth_error_handler)
     app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)
     app.add_exception_handler(Exception, errors.unhandled_exception_handler)

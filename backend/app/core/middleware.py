@@ -4,6 +4,7 @@ RequestIdMiddleware mints/honors a request id, exposes it on request.state + str
 and echoes it as the X-Request-ID response header. RateLimitMiddleware (M8c) enforces the §4.1 global
 per-IP / per-user fixed-window limits."""
 import secrets
+import time
 
 import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -13,6 +14,7 @@ from app.auth import ratelimit as rl
 from app.auth.security import decode_token
 from app.cache import redis as cache_redis
 from app.config import get_settings
+from app.core import metrics
 
 # §4.1 global fixed-window limits (module constants so tests can dial them down).
 GLOBAL_IP_PER_MIN = 100
@@ -53,6 +55,20 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
             structlog.contextvars.clear_contextvars()
         response.headers["X-Request-ID"] = rid
         return response
+
+
+class MetricsMiddleware(BaseHTTPMiddleware):
+    """Record per-request latency + status into the in-process accumulator (§8.2) for metrics_rollup."""
+
+    async def dispatch(self, request: Request, call_next):
+        start = time.perf_counter()
+        status = 500
+        try:
+            response = await call_next(request)
+            status = response.status_code
+            return response
+        finally:
+            metrics.record((time.perf_counter() - start) * 1000.0, status)
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):

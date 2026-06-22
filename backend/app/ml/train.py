@@ -262,7 +262,9 @@ class _NullRedis:
         return None
 
 
-async def _run(timeframe, db, models_root, now_iso, git_commit):
+async def train_and_write(db, timeframe, models_root, *, now_iso, git_commit="scheduled") -> dict | None:
+    """Build the dataset, train, write the artifact + feature importance. Returns the gate result
+    (or None when there aren't enough samples). Shared by the CLI and the model_retrain job."""
     from app.db.connection import connect
     from app.db.repositories import stocks as srepo
     cfg = load_ml_config()
@@ -270,14 +272,23 @@ async def _run(timeframe, db, models_root, now_iso, git_commit):
         refs = [r for r in await srepo.list_active_all(con) if r.exchange != "INDEX"]
         samples = await build_dataset(con, _NullRedis(), refs, timeframe)
         if len(samples) < MIN_SAMPLES:
-            print(f"{timeframe}: only {len(samples)} samples (< {MIN_SAMPLES}) -> DISABLED (gate skipped)")
-            return
+            return None
         art = train_timeframe(samples, timeframe, cfg, now_iso=now_iso, git_commit=git_commit)
         out = write_artifact(models_root, art)
         await persist_feature_importance(con, art)
     g = art["manifest"]["gate"]
-    print(f"{timeframe}: {art['algorithm']} {art['model_version']} -> win {g['win_rate']:.3f} "
-          f"cov {g['coverage']:.3f} gate={'PASS' if g['passed'] else 'FAIL'} -> {out}")
+    return {"timeframe": timeframe, "model_version": art["model_version"], "algorithm": art["algorithm"],
+            "win_rate": g["win_rate"], "coverage": g["coverage"], "passed": g["passed"],
+            "n_samples": len(samples), "path": out}
+
+
+async def _run(timeframe, db, models_root, now_iso, git_commit):
+    res = await train_and_write(db, timeframe, models_root, now_iso=now_iso, git_commit=git_commit)
+    if res is None:
+        print(f"{timeframe}: insufficient samples (< {MIN_SAMPLES}) -> DISABLED (gate skipped)")
+        return
+    print(f"{timeframe}: {res['algorithm']} {res['model_version']} -> win {res['win_rate']:.3f} "
+          f"cov {res['coverage']:.3f} gate={'PASS' if res['passed'] else 'FAIL'} -> {res['path']}")
 
 
 def main(argv=None):
