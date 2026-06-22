@@ -46,9 +46,16 @@ def _versions(model_dir: str, timeframe: str):
     return out
 
 
+def _has_weights(d: Path) -> bool:
+    """A promoted artifact must ship its weights, not just a manifest — guards the migration case
+    where manifests are tracked but the .pkl are gitignored/absent (else /predict 500s on load)."""
+    return (d / "model.pkl").is_file() and (d / "calibrators.pkl").is_file()
+
+
 def resolve_promoted(model_dir: str, timeframe: str) -> Path | None:
-    """The directory of the latest (by created_at) gate-PASSED artifact, or None."""
-    passed = [(d, m) for d, m in _versions(model_dir, timeframe) if m.get("gate", {}).get("passed")]
+    """The directory of the latest (by created_at) gate-PASSED artifact WITH weights present, or None."""
+    passed = [(d, m) for d, m in _versions(model_dir, timeframe)
+              if m.get("gate", {}).get("passed") and _has_weights(d)]
     if not passed:
         return None
     passed.sort(key=lambda dm: dm[1].get("created_at", ""), reverse=True)
