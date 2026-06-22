@@ -11,6 +11,12 @@
 		-Server
 	}
 
+	# Conventional health path → backend directly (uptime pingers + the §11 checklist hit /healthz;
+	# it doesn't collide with any SPA route).
+	handle /healthz {
+		reverse_proxy backend:8000
+	}
+
 	# API: strip the /api prefix and proxy to the root-mounted backend (no SPA/API path collision).
 	handle /api/* {
 		uri strip_prefix /api
