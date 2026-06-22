@@ -1,9 +1,12 @@
 # DC Intel — Phase 4 Implementation Roadmap
 
-> **STATUS (2026-06-21): ✅ M0–M10 CODE-COMPLETE.** Backend 564 pytest + frontend 44 vitest +
-> `vite build` all green. The single remaining gate is the `docker compose up` end-to-end smoke —
-> Docker is not yet installed on the homeserver (needs sudo); run it there to ship. See `handoff.md`
-> (repo root) for the authoritative current state + cold-start steps; `CLAUDE.md` for binding standards.
+> **STATUS (2026-06-22): 🎉 M0–M10 COMPLETE — the §11 launch gate PASSED.** Backend 569 pytest +
+> frontend 44 vitest + `vite build` green, AND the full `docker compose up` stack runs on localhost
+> with REAL data: /healthz {sqlite,redis,scheduler:true}, the Caddy-served SPA, search returns
+> Samsung + live quotes (AAPL 298.01), /dashboard/indexes (5 tiles + intraday sparklines) and
+> /dashboard/trending (10/10 movers) live, global rate-limit + request-id middleware verified.
+> `/predict` is honestly disabled-with-note (no model clears the 52% gate on free data — a stronger
+> retrain is in progress). See `handoff.md` for detail; `CLAUDE.md` for binding standards.
 
 > **For agentic workers:** this is the **program roadmap** — the ordered milestones, dependencies, and test strategy. Each milestone gets its own detailed TDD plan (file `docs/superpowers/plans/YYYY-MM-DD-dc-intel-<Mn>-<name>.md`) written just before it is executed. The first one (`...-m0-foundation.md`) already exists. Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` per milestone plan.
 

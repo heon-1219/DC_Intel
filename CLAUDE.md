@@ -59,7 +59,10 @@ git**. This file + `handoff.md` + the plan docs are the authoritative, repo-trac
 ## Status (see handoff.md for detail)
 ✅ **M0–M10 CODE-COMPLETE** (foundation, market data, indicators, economic calendar, sentiment/intel,
 ML training, prediction serving + auth, win-loss tracking, dashboard API + full hardening, React+Vite
-frontend, local-first deploy). Backend 564 pytest + frontend 44 vitest + `vite build` all green. The
-only remaining gate is the `docker compose up` end-to-end smoke — **Docker is not yet installed on the
-homeserver** (needs sudo); run it there to ship. Frontend toolchain: Node via nvm
-(`~/.nvm/versions/node/v24.17.0/bin`); `cd frontend && npm run dev|test|build`.
+frontend, local-first deploy). Backend 569 pytest + frontend 44 vitest + `vite build` green, and the
+**`docker compose up` end-to-end smoke PASSED** on the homeserver (2026-06-22): full stack live on
+localhost with REAL data (healthz, Caddy SPA, search + live quotes, indexes/trending, rate-limit +
+request-id middleware). Docker 29.1.3 + compose installed; run docker via `sg docker -c "…"` (the
+agent user is in the docker group but not in this login session). Frontend toolchain: Node via nvm
+(`~/.nvm/versions/node/v24.17.0/bin`). `/predict` honestly disabled-with-note (no model clears the
+52% gate on free data; stronger retrain underway).
