@@ -9,7 +9,7 @@ COPY config/ /srv/config/
 # CUDA build); then the editable install with the [ml] extra (torch already satisfied) for the
 # M4 sentiment/clustering models. Models themselves download from HuggingFace at first use.
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir -e ".[ml]"
+RUN pip install --no-cache-dir -e ".[ml,x]"
 
 ENV DATABASE_URL=sqlite+aiosqlite:////data/dcintel.db
 # Normalize line endings (Windows authoring) before making the entrypoint executable.
