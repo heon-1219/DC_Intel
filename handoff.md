@@ -13,15 +13,29 @@ docker stack runs on localhost with REAL data; Phase 5 turns the dormant data/mo
 - **Intel/sentiment pillar — Steps 2 & 3 DONE (keyless KR flows E2E):** Naver per-stock board (browser-UA
   fix, commit `7095264`) → `market_intel` (993 rows) → mDeBERTa CPU zero-shot classify → `sentiment_logs`
   (255 rows). Accrues automatically via the scheduled `intel_scrape` + `aggregate_sentiment` jobs.
-- **Step 4 (free keys) — IN PROGRESS:** owner added FINNHUB / FRED / NEWSAPI + X cookies
-  (`TWITTER_AUTH_TOKEN`/`TWITTER_CT0`) to `.env`. **Reddit + Stocktwits intentionally skipped** (Reddit app
-  signup bugged; Stocktwits is keyless-public anyway + new API registration is closed). ⚠️ compose passes
-  the keys via `${VAR}` but the running backend predates the edit → **`docker compose up -d --build backend`
-  needed to activate them**. X also requires **`twikit`** (now added as the `[x]` extra + Dockerfile
-  `.[ml,x]`) — without it the cookies are inert.
-- **AIWCE whisper engine — pure cores DONE, NOT wired:** config/normalize/robust/weight/cluster/score/engine
-  committed via TDD (commits `420cf36`,`e8383f6`). Remaining = plan Steps 4–6: real fetchers (cassette-tested)
-  → migration + repo + scheduled job + earnings-calendar wiring → API + UI badge. Fully unblocked dev.
+- **Step 4 (free keys) — ✅ DONE + VERIFIED LIVE (2026-06-24, commit `72c1c2e`):** rebuilt backend so
+  FINNHUB / FRED / NEWSAPI keys + X cookies are active in-container. In-container live check: FRED 569
+  release dates, Finnhub 998 earnings (w/ EPS estimates), Finnhub quote AAPL $297.44, Finnhub news 499,
+  NewsAPI 40 — all REAL. US sentiment now accrues (finnhub_news tags `symbols=[symbol]` → maps to US
+  stock_id; NewsAPI mostly market-wide, no cashtags). **Reddit + Stocktwits skipped** (Reddit signup
+  bugged; Stocktwits keyless-public + registration closed). **X (twikit 2.3.3 installed via the new `[x]`
+  extra) FAILS at runtime** — `Couldn't get KEY_BYTE indices` (X anti-bot transaction-id, fragile from this
+  host); fail-opens to []. ⚠️ For a PUBLIC deploy, blank NewsAPI (free plan = dev-only ToS), X, Reddit.
+- **AIWCE whisper engine — ✅ COMPLETE + LIVE (commit `49b1894`):** Steps 4–6 backend built TDD — migration
+  003_whisper_numbers, repo, daily job (`whisper_corroborate` 22:00 UTC; reads upcoming `earnings:*` from
+  economic_events for the consensus anchor → `corroborate()` → persists result/abstention), fetchers
+  (earningswhispers Tier-A + thewhispernumber Tier-C BUILT vs REAL cassettes; estimize WAF-gated +
+  stocktwits scaffolded), and `GET /stocks/{i}/whisper` (anon, envelope, status=null pre-compute — verified
+  200 live). Suite **642 pass** (+73). **Deferred:** (1) FRONTEND whisper badge (UI needs visual verify —
+  out of scope of the backend build); (2) wire `WhisperObservation.consensus_eps` as an anchor-fallback when
+  finnhub lacks consensus (closes a NO_ANCHOR over-abstention coverage gap; captured-but-inert today).
+- **Going public (kctrading.xyz on the home server) — playbook researched (not yet applied):** recommended
+  path = Cloudflare free DNS + Cloudflare Tunnel (`cloudflared` container, outbound-only → no port-forward,
+  hides home IP, free edge TLS, CGNAT-proof); Caddyfile UNCHANGED (tunnel terminates TLS). Owner moves
+  GoDaddy NS → Cloudflare, creates a tunnel → public hostname `web:80`. Repo edits pending owner go-ahead +
+  tunnel token: add `cloudflared` service, `web` `ports`→`expose`, `.env` `TUNNEL_TOKEN`. Soft-launch the
+  DATA dashboard first (predictions still gated). Legal: free+educational framing, real /terms+/privacy,
+  PIPA consent for stored emails.
 - **Model pillar:** blocked on sentiment *accrual* (~2–4 wks, forward-only — can't backfill) → Step 7 retrain
   → maybe a gate-passer → Step 8 `/predict` live + record. Step 1 (1h/5h) reclassified low-priority
   (short horizons ≈ coin-flip; 5m/15m feed intervals were never backfilled — not a bug).
