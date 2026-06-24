@@ -31,9 +31,23 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-    ports: ["80:80"]
+    ports: ["80:80"]   # keeps localhost/LAN access; the tunnel reaches web:80 over the compose net
     depends_on: [backend]
     restart: unless-stopped
+  # Public ingress for kctrading.xyz via Cloudflare Tunnel: an OUTBOUND-only connector (no port
+  # forwarding, hides the home IP, free edge TLS, CGNAT-proof). Behind the "tunnel" profile so the
+  # default `docker compose up` is unchanged — bring it up only AFTER setting TUNNEL_TOKEN in .env:
+  #     docker compose --profile tunnel up -d
+  # The public hostname (kctrading.xyz -> http://web:80) is configured in the Cloudflare dashboard,
+  # not here. The Caddyfile and TLS need NO changes — Cloudflare terminates TLS at its edge.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.6.1
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:-}
+    depends_on: [web]
+    restart: unless-stopped
+    profiles: ["tunnel"]
 volumes:
   dbdata:
   hfcache:
