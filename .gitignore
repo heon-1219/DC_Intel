@@ -14,3 +14,5 @@ backend/models/**/*.pkl
 backend/dcintel.db
 .pytest_cache/
 .obsidian/
+# editor/agent temp files (e.g. a *.md.tmp.PID.hash got tracked once); never commit these
+*.tmp.*
