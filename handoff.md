@@ -26,16 +26,21 @@ docker stack runs on localhost with REAL data; Phase 5 turns the dormant data/mo
   economic_events for the consensus anchor → `corroborate()` → persists result/abstention), fetchers
   (earningswhispers Tier-A + thewhispernumber Tier-C BUILT vs REAL cassettes; estimize WAF-gated +
   stocktwits scaffolded), and `GET /stocks/{i}/whisper` (anon, envelope, status=null pre-compute — verified
-  200 live). Suite **642 pass** (+73). **Deferred:** (1) FRONTEND whisper badge (UI needs visual verify —
-  out of scope of the backend build); (2) wire `WhisperObservation.consensus_eps` as an anchor-fallback when
-  finnhub lacks consensus (closes a NO_ANCHOR over-abstention coverage gap; captured-but-inert today).
-- **Going public (kctrading.xyz on the home server) — playbook researched (not yet applied):** recommended
-  path = Cloudflare free DNS + Cloudflare Tunnel (`cloudflared` container, outbound-only → no port-forward,
-  hides home IP, free edge TLS, CGNAT-proof); Caddyfile UNCHANGED (tunnel terminates TLS). Owner moves
-  GoDaddy NS → Cloudflare, creates a tunnel → public hostname `web:80`. Repo edits pending owner go-ahead +
-  tunnel token: add `cloudflared` service, `web` `ports`→`expose`, `.env` `TUNNEL_TOKEN`. Soft-launch the
-  DATA dashboard first (predictions still gated). Legal: free+educational framing, real /terms+/privacy,
-  PIPA consent for stored emails.
+  200 live). Suite **646 pass** (+77). Both follow-ups DONE: (1) **frontend whisper badge** on StockView
+  (`WhisperCard`+`useWhisper`; blue/amber/gray badge never green/red; all states; ko/en; commit `21d16f2`;
+  vitest 52 — live visual verify still pending the running app); (2) **anchor-fallback**
+  (`jobs/whisper_corroborator.resolve_prior`: finnhub consensus → else a source's `consensus_eps`; closes the
+  NO_ANCHOR over-abstention; commit `ba1fa16`). consensus_eps now consumed.
+- **Going public (kctrading.xyz on the home server) — REPO PREP APPLIED (commit `f372a71`):** path =
+  Cloudflare free DNS + Cloudflare Tunnel (`cloudflared` service pinned `2026.6.1`, outbound-only → no
+  port-forward, hides home IP, free edge TLS, CGNAT-proof); Caddyfile + TLS UNCHANGED (Cloudflare edge
+  terminates TLS). The service is behind the **`tunnel` compose profile** so default `docker compose up` is
+  unchanged; go live with `docker compose --profile tunnel up -d` after setting `TUNNEL_TOKEN` in `.env`.
+  `web` keeps `ports:[80:80]` (LAN preserved; optional later hardening = swap to `expose`). **Owner-side
+  steps remaining (need their login):** Cloudflare account + add-site → GoDaddy NS → Cloudflare (disable
+  DNSSEC first) → create tunnel + copy token → add public hostname `kctrading.xyz`→`http://web:80`. Owner
+  uses it personally → API-publicity/legal hardening de-scoped per owner. Soft-launch the DATA dashboard
+  (predictions still gated).
 - **Model pillar:** blocked on sentiment *accrual* (~2–4 wks, forward-only — can't backfill) → Step 7 retrain
   → maybe a gate-passer → Step 8 `/predict` live + record. Step 1 (1h/5h) reclassified low-priority
   (short horizons ≈ coin-flip; 5m/15m feed intervals were never backfilled — not a bug).
