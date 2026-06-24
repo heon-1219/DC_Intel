@@ -1,0 +1,146 @@
+/* Whisper EPS card — reuses the prediction .section frame + the intel badge color contract
+ * (blue=corroborated / amber=tentative / gray=no-reliable), never green/red for status (§4.1). */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.title {
+  font-size: var(--type-h2);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Status badge — color paired with an icon + word, never color alone (§9). */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--type-caption);
+  font-weight: 600;
+  padding: 2px var(--sp-2);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.badgeCorroborated {
+  composes: badge;
+  color: var(--confirmed);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+.badgeTentative {
+  composes: badge;
+  color: var(--unconfirmed);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+.badgeNeutral {
+  composes: badge;
+  color: var(--neutral-text);
+  background: var(--neutral-bg);
+  border: 1px solid var(--border);
+}
+
+.explain {
+  margin: 0;
+  font-size: var(--type-caption);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+/* Whisper vs consensus values — aligned, tabular so re-renders don't shimmy (P9). */
+.values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-4);
+}
+.valueBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.valueLabel {
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}
+.valueNum {
+  font-size: var(--type-metric);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.anchorNum {
+  composes: valueNum;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+/* Surprise vs consensus IS a directional number → the only place green/red applies (§4.1). */
+.surprise {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.bull {
+  color: var(--bull-text);
+}
+.bear {
+  color: var(--bear-text);
+}
+.neutral {
+  color: var(--neutral-text);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-3);
+  font-size: var(--type-caption);
+  color: var(--text-2);
+}
+.metaNum {
+  font-variant-numeric: tabular-nums;
+}
+
+.families {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.familiesLabel {
+  font-size: var(--type-caption);
+  color: var(--text-3);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--type-caption);
+  padding: 2px var(--sp-2);
+  border-radius: 999px;
+  background: var(--neutral-bg);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+/* Quiet empty/abstain copy — informational, never an alarming error color. */
+.quiet {
+  margin: 0;
+  font-size: var(--type-body);
+  color: var(--text-2);
+}

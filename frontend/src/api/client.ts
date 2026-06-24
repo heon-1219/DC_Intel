@@ -14,6 +14,7 @@ import type {
   SearchData,
   Timeframe,
   TrendingData,
+  WhisperData,
 } from "./types";
 
 const BASE = import.meta.env.VITE_API_BASE ?? "/api";
@@ -123,6 +124,8 @@ export const api = {
     request<AccuracyData>(`/stocks/${listing}/accuracy`, { signal }),
   history: (listing: string, limit = 30, signal?: AbortSignal) =>
     request<HistoryData>(`/stocks/${listing}/history?limit=${limit}`, { signal }),
+  whisper: (listing: string, signal?: AbortSignal) =>
+    request<WhisperData>(`/stocks/${listing}/whisper`, { signal }),
   search: (q: string, signal?: AbortSignal) =>
     request<SearchData>(`/stocks/search?q=${enc(q)}`, { signal }),
 

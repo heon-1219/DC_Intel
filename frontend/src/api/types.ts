@@ -224,6 +224,29 @@ export interface MarketIntelData {
   clusters: IntelCluster[];
 }
 
+// --- whisper EPS (AIWCE corroboration) ---
+// status bands (whisper_config): corroborated ≥75, tentative 55–75, no_reliable_whisper <55.
+// `null` status = no row computed yet (the backend returns 200 with empty fields, never 404).
+export type WhisperStatus = "corroborated" | "tentative" | "no_reliable_whisper";
+export interface WhisperData {
+  instrument: string;
+  status: WhisperStatus | null;
+  whisper_value: number | null;
+  confidence: number | null; // 0..100
+  anchor: number | null; // official consensus EPS
+  surprise_vs_anchor: number | null; // whisper − anchor
+  earnings_date: string | null; // ISO date (YYYY-MM-DD)
+  n_inliers: number;
+  n_outliers_rejected: number;
+  n_distinct_families: number;
+  contributing_families: string[];
+  inlier_dispersion: number | null;
+  factors: Record<string, unknown>;
+  abstain_reason: string | null;
+  rounds_used: number;
+  computed_at: string | null;
+}
+
 // --- predict ---
 export interface EvidenceItem {
   kind: "technical" | "sentiment" | "calendar" | string;

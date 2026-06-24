@@ -78,6 +78,17 @@ export function relativeTime(
   return t("time.hourAgo", { n: Math.floor(min / 60) });
 }
 
+/** A calendar date (no time) from an ISO date string like "2026-07-15" → "Jul 15, 2026" /
+ *  "2026년 7월 15일". Parsed at noon UTC so the day never drifts across timezones. */
+export function localDate(iso: string, lang: Lang): string {
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(`${iso}T12:00:00Z`) : new Date(iso);
+  return new Intl.DateTimeFormat(lang === "ko" ? "ko-KR" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(d);
+}
+
 /** A local clock time (HH:MM) in the user's tz, from a UTC ISO string. */
 export function localTime(iso: string, lang: Lang): string {
   const locale = lang === "ko" ? "ko-KR" : "en-US";

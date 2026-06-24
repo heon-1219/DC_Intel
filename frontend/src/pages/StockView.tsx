@@ -11,6 +11,7 @@ import DirectionIndicator from "../components/predict/DirectionIndicator";
 import EvidenceList from "../components/predict/EvidenceList";
 import PriceHeader from "../components/predict/PriceHeader";
 import TimeframeSelector from "../components/predict/TimeframeSelector";
+import WhisperCard from "../components/predict/WhisperCard";
 import { StaleChip } from "../components/common/Chips";
 import Disclaimer from "../components/common/Disclaimer";
 import ErrorCard from "../components/common/ErrorCard";
@@ -87,6 +88,7 @@ function PredictionTab({ listing }: { listing: string }) {
             ) : null}
           </section>
           <CrossMarketTable listing={listing} />
+          <WhisperCard listing={listing} />
           <IntelFeed stock={listing} />
         </div>
       </div>
