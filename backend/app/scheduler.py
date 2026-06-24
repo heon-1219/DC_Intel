@@ -20,6 +20,9 @@ JOB_CRONS = {
     "db_backup": {"hour": 19, "minute": 30},          # 04:30 KST — quietest cross-market window
     "win_rate_monitor": {"hour": 22, "minute": 30},   # 07:30 KST
     "model_retrain": {"day_of_week": "sat", "hour": 18, "minute": 0},  # Sun 03:00 KST (both closed)
+    # AIWCE whisper corroboration: daily at 22:00 UTC (07:00 KST), right after sync_calendar (21:30)
+    # so the upcoming-earnings consensus anchors are fresh for the run.
+    "whisper_corroborate": {"hour": 22, "minute": 0},
 }
 JOB_IDS = list(JOB_INTERVALS) + list(JOB_CRONS)
 

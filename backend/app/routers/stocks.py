@@ -13,6 +13,7 @@ from app.core.instrument import InvalidInstrument, parse_instrument
 from app.db.connection import connect
 from app.db.repositories import accuracy as accrepo
 from app.db.repositories import stocks as repo
+from app.db.repositories import whisper as wrepo
 from app.market.hours import market_state
 from app.ml.config import TIMEFRAMES
 from app.providers.fx_provider import FxProvider
@@ -147,6 +148,52 @@ async def get_accuracy(instrument: str, request: Request):
     return JSONResponse(content=make_envelope(
         data, source="internal", data_as_of=now_iso, is_stale=False,
         cache=cache_status, request_id=rid))
+
+
+@router.get("/stocks/{instrument}/whisper")
+async def get_whisper(instrument: str, request: Request):
+    """Public (no auth) latest AIWCE whisper-EPS corroboration for a stock — the corroborated/
+    tentative badge + value vs consensus, OR an honest abstention (status no_reliable_whisper +
+    abstain_reason). A stock with no row yet returns 200 with status=None ("not computed"), never a
+    404 — only an unknown symbol 404s."""
+    rid = errors.request_id(request)
+    try:
+        symbol, exchange = parse_instrument(instrument)
+    except InvalidInstrument:
+        return _err(400, "INVALID_PARAM", "Malformed instrument.", "잘못된 종목 형식이에요.", rid)
+
+    async with connect(get_settings().sqlite_path) as con:
+        ref = await repo.get_stock(con, symbol, exchange)
+        if ref is None:
+            return _err(404, "SYMBOL_NOT_FOUND", "Unknown stock.", "알 수 없는 종목이에요.", rid)
+        row = await wrepo.get_latest_for_stock(con, ref.id)
+
+    inst = f"{symbol}:{exchange}"
+    if row is None:
+        data = {
+            "instrument": inst, "status": None, "whisper_value": None, "confidence": None,
+            "anchor": None, "surprise_vs_anchor": None, "earnings_date": None,
+            "n_inliers": 0, "n_outliers_rejected": 0, "n_distinct_families": 0,
+            "contributing_families": [], "inlier_dispersion": None, "factors": {},
+            "abstain_reason": None, "rounds_used": 0, "computed_at": None,
+        }
+        as_of = _iso(datetime.now(timezone.utc))
+    else:
+        data = {
+            "instrument": inst, "status": row["status"], "whisper_value": row["whisper_value"],
+            "confidence": row["confidence"], "anchor": row["anchor"],
+            "surprise_vs_anchor": row["surprise_vs_anchor"], "earnings_date": row["earnings_date"],
+            "n_inliers": row["n_inliers"], "n_outliers_rejected": row["n_outliers_rejected"],
+            "n_distinct_families": row["n_distinct_families"],
+            "contributing_families": row["contributing_families"],
+            "inlier_dispersion": row["inlier_dispersion"], "factors": row["factors"],
+            "abstain_reason": row["abstain_reason"], "rounds_used": row["rounds_used"],
+            "computed_at": row["computed_at"],
+        }
+        as_of = row["computed_at"]
+    return JSONResponse(content=make_envelope(
+        data, source="internal", data_as_of=as_of, is_stale=False,
+        cache="miss", request_id=rid))
 
 
 SEARCH_LIMIT_PER_MIN = 60   # §4.2 per-endpoint override (module-level so tests can dial it down)

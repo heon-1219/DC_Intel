@@ -31,6 +31,7 @@ from app.jobs.db_backup import run_db_backup
 from app.jobs.metrics_rollup import run_metrics_rollup
 from app.jobs.model_retrain import run_model_retrain
 from app.jobs.win_rate_monitor import run_win_rate_monitor
+from app.jobs.whisper_corroborator import run_whisper_corroborator
 from app.jobs.event_study import econ_event_study
 from app.jobs.indicator_calculator import recompute_indicators
 from app.jobs.outcome_checker import run_outcome_checker
@@ -143,6 +144,10 @@ async def lifespan(app: FastAPI):
     async def _retrain():
         await run_model_retrain(settings.sqlite_path, settings.model_dir)
 
+    async def _whisper():
+        # default fetcher factory wires the real free whisper sources per upcoming-earnings ticker
+        await run_whisper_corroborator(settings.sqlite_path)
+
     sched = build_scheduler(run=True, jobs={
         "poll_prices_krx": _krx, "poll_prices_us": _us, "poll_indexes": _idx,
         "heartbeat": _hb, "recompute_indicators": _ind, "build_dashboard": _dash,
@@ -152,7 +157,8 @@ async def lifespan(app: FastAPI):
         "intel_confirmation_match": _confirm, "outcome_checker": _outcome,
         "intel_author_stats": _author_stats, "intel_retention": _retention,
         "win_rate_monitor": _winrate, "db_backup": _backup,
-        "metrics_rollup": _metrics, "model_retrain": _retrain})
+        "metrics_rollup": _metrics, "model_retrain": _retrain,
+        "whisper_corroborate": _whisper})
     try:
         yield
     finally:

@@ -14,6 +14,11 @@ class WhisperObservation:
     as_of_date: date
     context_snippet: str = ""
     quarter: str | None = None
+    # a consensus EPS some sources report alongside the whisper (earningswhispers 'estimate',
+    # thewhispernumber 'consensus'). CAPTURED but not yet consumed: the job builds the prior anchor
+    # solely from the finnhub event consensus today. Reserved for a future anchor-fallback (would
+    # close the coverage gap where finnhub lacks consensus but a source carries one) — see handoff.
+    consensus_eps: float | None = None
     # derived (None until the weight pass fills them)
     age_days: int | None = None
     recency_weight: float | None = None

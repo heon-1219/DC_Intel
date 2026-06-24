@@ -18,7 +18,16 @@ def test_scheduler_registers_all_jobs_including_indicators_and_calendar():
                    "intel_scrape", "aggregate_sentiment", "intel_anomaly_scan",
                    "intel_confirmation_match", "intel_author_stats", "intel_retention",
                    "outcome_checker", "win_rate_monitor", "db_backup", "metrics_rollup",
-                   "model_retrain"}
+                   "model_retrain", "whisper_corroborate"}
+
+
+def test_whisper_corroborate_is_a_daily_cron():
+    from apscheduler.triggers.cron import CronTrigger
+    sched = build_scheduler(run=False)
+    job = sched.get_job("whisper_corroborate")
+    assert isinstance(job.trigger, CronTrigger)
+    fields = {f.name: str(f) for f in job.trigger.fields}
+    assert fields["hour"] == "22" and fields["minute"] == "0"
 
 
 def test_event_study_is_a_daily_cron_at_0200_utc():
