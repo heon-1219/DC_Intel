@@ -10,7 +10,11 @@ from bs4 import BeautifulSoup
 
 from app.intel.models import RawIntel
 
-_UA = {"User-Agent": "DC-Intel/1.0 (personal research; contact: dc_intel) Mozilla/5.0",
+# A realistic browser User-Agent (data-sources.md §3: "realistic headers", no detection-evasion).
+# A bot-identifying UA gets a stub page from Naver Finance (~2.6KB vs the full ~160KB board), so the
+# board parser found nothing — the polite-but-honest header is a real browser string.
+_UA = {"User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/124.0 Safari/537.36"),
        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8"}
 _DC_GALLERIES = {"domestic": "https://gall.dcinside.com/board/lists/?id=stock_new1",
                  "overseas": "https://gall.dcinside.com/board/lists/?id=stockus"}

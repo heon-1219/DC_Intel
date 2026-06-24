@@ -21,6 +21,7 @@ services:
       - TWITTER_CT0=${TWITTER_CT0:-}
     volumes:
       - dbdata:/data # SQLite file, model artifacts, local backups, alert log
+      - hfcache:/root/.cache/huggingface # persist mDeBERTa/MiniLM weights across restarts
     depends_on: [redis]
     restart: unless-stopped
   redis:
@@ -35,3 +36,4 @@ services:
     restart: unless-stopped
 volumes:
   dbdata:
+  hfcache:
