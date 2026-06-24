@@ -6,8 +6,9 @@ fetchers, and persist the result OR a first-class abstention via the whisper rep
 
 The earnings anchor lives on the economic_events row written by the M3 calendar sync:
   event_type = 'earnings:{SYMBOL}:{EXCHANGE}'  and  metrics[key=='eps'].forecast = consensus EPS.
-A missing consensus or earnings date is NOT a failure — the engine abstains (NO_ANCHOR /
-NO_EARNINGS_DATE), which we store honestly. Fetch errors are swallowed by the engine (fail-open).
+When finnhub has no consensus, the anchor falls back to a consensus a high-trust source reports
+alongside the whisper (resolve_prior); only if neither supplies one do we abstain NO_ANCHOR. A
+missing earnings date is also honest abstention. Fetch errors are swallowed (fail-open).
 
 Run once: python -m app.jobs.whisper_corroborator [--db PATH]."""
 import argparse
@@ -28,8 +29,8 @@ from app.intel.whisper.weight import build_prior
 
 def parse_earnings_anchor(row: dict) -> dict | None:
     """Pure: pull (symbol, exchange, consensus_eps, earnings_date) from a stored earnings event row.
-    Returns None for non-earnings events. consensus_eps may be None (no estimate yet) — the caller
-    keeps the row so the engine can abstain NO_ANCHOR rather than silently dropping the stock."""
+    Returns None for non-earnings events. consensus_eps may be None (no finnhub estimate yet) — the
+    caller keeps the row and tries a source-consensus fallback (resolve_prior) before any abstention."""
     etype = row.get("event_type") or ""
     if not etype.startswith("earnings:"):
         return None
@@ -61,6 +62,30 @@ def parse_earnings_anchor(row: dict) -> dict | None:
             "earnings_date": earnings_date}
 
 
+# High-trust sources that report an official consensus EPS alongside the whisper. When the finnhub
+# earnings event has no consensus, the anchor falls back to one of these (in priority order) so a
+# stock with a real whisper isn't lost to NO_ANCHOR. The engine's plausibility gate needs the anchor
+# BEFORE the corroboration fetch, so we resolve it here via a cheap, fail-open pre-fetch.
+FALLBACK_ANCHOR_SOURCES = ("earningswhispers", "websearch")
+
+
+def resolve_prior(fetcher, finnhub_consensus, earnings_date):
+    """Build the trustworthy anchor (WhisperPrior) or None. Prefer the finnhub event consensus; if it
+    is absent, fall back to a `consensus_eps` carried by a high-trust source observation
+    (earningswhispers, then websearch/thewhispernumber). Returns None only when neither finnhub nor any
+    source supplies a consensus -> the engine then abstains NO_ANCHOR (unchanged honesty)."""
+    if finnhub_consensus is not None:
+        return build_prior(finnhub_consensus, earnings_date, source="finnhub")
+    for src in FALLBACK_ANCHOR_SOURCES:
+        try:
+            for obs in (fetcher.fetch(src) or []):
+                if getattr(obs, "consensus_eps", None) is not None:
+                    return build_prior(obs.consensus_eps, earnings_date, source=src)
+        except Exception:  # noqa: BLE001 - fail-open like the rest of the pipeline
+            continue
+    return None
+
+
 def _default_fetcher_factory(symbol: str, exchange: str, earnings_date: date):
     return build_default_fetcher(symbol, exchange, earnings_date)
 
@@ -90,8 +115,8 @@ async def run_whisper_corroborator(db_path: str, *, fetcher_factory=None, now=No
             ref = await srepo.get_stock(con, anchor["symbol"], anchor["exchange"])
             if ref is None:
                 continue
-            prior = build_prior(anchor["consensus_eps"], anchor["earnings_date"])
             fetcher = fetcher_factory(anchor["symbol"], anchor["exchange"], anchor["earnings_date"])
+            prior = resolve_prior(fetcher, anchor["consensus_eps"], anchor["earnings_date"])
             result = corroborate(prior, fetcher, today=today, computed_at=now_dt)
             await wrepo.upsert_result(con, stock_id=ref.id, earnings_event_id=row.get("id"),
                                       earnings_date=anchor["earnings_date"], result=result)

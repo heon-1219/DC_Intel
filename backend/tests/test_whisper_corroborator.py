@@ -8,7 +8,7 @@ from app.db.connection import connect
 from app.db.migrate import migrate
 from app.db.repositories import whisper as wrepo
 from app.intel.whisper.models import WhisperObservation
-from app.jobs.whisper_corroborator import parse_earnings_anchor, run_whisper_corroborator
+from app.jobs.whisper_corroborator import parse_earnings_anchor, resolve_prior, run_whisper_corroborator
 from app.intel import whisper_config as cfg
 
 MIG = str(Path(__file__).resolve().parents[1] / "migrations")
@@ -131,6 +131,56 @@ async def test_job_abstains_no_anchor_when_consensus_missing(tmp_path):
         row = await wrepo.get_latest_for_stock(con, 1)
     assert row["status"] == "no_reliable_whisper"
     assert row["abstain_reason"] == "NO_ANCHOR"
+
+
+# ---- anchor fallback: a finnhub-less stock recovers a prior from a source's own consensus_eps ----
+
+def _oc(value, source, as_of, consensus):
+    """An observation that ALSO carries the source's reported consensus (earningswhispers 'estimate',
+    thewhispernumber 'consensus')."""
+    return WhisperObservation(
+        value=value, raw_value=str(value), source=source, source_family=cfg.source_family(source),
+        source_credibility_prior=cfg.source_prior(source), as_of_date=as_of,
+        context_snippet=source, consensus_eps=consensus)
+
+
+def test_resolve_prior_prefers_finnhub_consensus():
+    # finnhub has the consensus -> use it directly, tagged 'finnhub' (no fallback fetch).
+    prior = resolve_prior(FakeFetcher({}), 1.70, date(2026, 7, 1))
+    assert prior is not None and prior.mu0 == 1.70 and prior.consensus_source == "finnhub"
+
+
+def test_resolve_prior_falls_back_to_source_consensus_when_finnhub_missing():
+    fetcher = FakeFetcher({"earningswhispers": [_oc(1.78, "earningswhispers", date(2026, 6, 23), 1.70)]})
+    prior = resolve_prior(fetcher, None, date(2026, 7, 1))
+    assert prior is not None and prior.mu0 == 1.70 and prior.consensus_source == "earningswhispers"
+
+
+def test_resolve_prior_none_when_no_source_carries_consensus():
+    # finnhub missing AND no source reports a consensus -> still None (engine abstains NO_ANCHOR).
+    fetcher = FakeFetcher({"earningswhispers": [_o(1.78, "earningswhispers", date(2026, 6, 23))]})
+    assert resolve_prior(fetcher, None, date(2026, 7, 1)) is None
+
+
+@pytest.mark.asyncio
+async def test_job_recovers_anchor_from_source_when_finnhub_lacks_consensus(tmp_path):
+    # finnhub event has NO eps forecast, but the sources report a whisper AND their consensus:
+    # the job recovers the anchor and corroborates instead of abstaining NO_ANCHOR.
+    db = await _db_with_earnings(tmp_path, with_consensus=False)
+    d = date(2026, 6, 23)
+    fetcher_factory = _make_fetcher_factory({
+        "earningswhispers": [_oc(1.72, "earningswhispers", d, 1.70)],
+        "estimize": [_oc(1.72, "estimize", d, 1.70)],
+        "websearch": [_oc(1.72, "websearch", d, 1.70)],
+    })
+    n = await run_whisper_corroborator(db, fetcher_factory=fetcher_factory, now=NOW)
+    assert n == 1
+    async with connect(db) as con:
+        row = await wrepo.get_latest_for_stock(con, 1)
+    assert row["abstain_reason"] != "NO_ANCHOR"
+    assert row["anchor"] == 1.70            # recovered from earningswhispers' reported consensus
+    assert row["status"] == "corroborated"
+    assert row["whisper_value"] == 1.72
 
 
 @pytest.mark.asyncio

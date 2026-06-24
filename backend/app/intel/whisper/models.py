@@ -15,9 +15,9 @@ class WhisperObservation:
     context_snippet: str = ""
     quarter: str | None = None
     # a consensus EPS some sources report alongside the whisper (earningswhispers 'estimate',
-    # thewhispernumber 'consensus'). CAPTURED but not yet consumed: the job builds the prior anchor
-    # solely from the finnhub event consensus today. Reserved for a future anchor-fallback (would
-    # close the coverage gap where finnhub lacks consensus but a source carries one) — see handoff.
+    # thewhispernumber 'consensus'). Used by jobs/whisper_corroborator.resolve_prior as the anchor
+    # FALLBACK when the finnhub event has no consensus — so a stock with a real whisper isn't lost to
+    # NO_ANCHOR just because finnhub lacked the estimate.
     consensus_eps: float | None = None
     # derived (None until the weight pass fills them)
     age_days: int | None = None
