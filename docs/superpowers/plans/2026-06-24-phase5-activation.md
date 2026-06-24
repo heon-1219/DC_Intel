@@ -20,6 +20,19 @@ keyless Naver fix ───┼─► stock-mapped intel ─► per-stock sentime
 Two pillars run in parallel: **(A) the intel/sentiment data path** and **(B) the prediction model**.
 GPU + reliability + reach are supporting tracks.
 
+## Progress log
+- **2026-06-24 — Steps 2 & 3 DONE; Step 6 STARTED.** The intel/sentiment pillar now works end-to-end
+  *keyless*: mDeBERTa verified loading + classifying accurately on CPU in-container (cross-lingual);
+  root-caused `sentiment_logs=0` to the KR scrapers' bot-identifying User-Agent (Naver served a 2.6KB
+  stub) → fixed to a realistic browser UA → Naver returns 296 real per-stock posts across 15 KRX codes;
+  end-to-end run ingested 286 stock-mapped items → classified (58 bull / 81 bear / 241 neutral) →
+  **`sentiment_logs` 0 → 15** per-stock scores. Added an `hfcache` volume so weights persist across
+  restarts. The scheduled `intel_scrape` (now with the browser UA) + `aggregate_sentiment` jobs keep KR
+  sentiment accruing automatically. **Remaining gap is US/global sentiment → needs Step 4 (API keys).**
+- Step 1 reclassified: NOT a bug — 1h/5h use 5m/15m feed intervals (`ml.yaml`) which were never
+  backfilled; low priority (short horizons ~unpredictable). Step 0.2 (DC general-board noise) deferred:
+  it's market-wide unmapped chatter, partially real; revisit vs. real keyed sources.
+
 ## Honest caveats (set expectations)
 - **Sentiment can't be backfilled** → predictions-improved-by-sentiment is weeks away, not today.
 - **Beating the 52% gate is not guaranteed even with sentiment** — short-horizon direction is near-coin-flip. We maximize the odds honestly; if it still fails, the product ships predictions disabled-with-note (which is correct, not a failure).
